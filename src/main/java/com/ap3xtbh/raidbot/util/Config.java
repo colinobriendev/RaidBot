@@ -1,5 +1,6 @@
 package com.ap3xtbh.raidbot.util;
 
+import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
@@ -8,6 +9,8 @@ import org.slf4j.LoggerFactory;
 
 import java.io.FileNotFoundException;
 import java.io.FileReader;
+import java.util.Arrays;
+
 
 /**
  * Pull data from bot config json
@@ -17,7 +20,7 @@ public class Config {
 
     private String token = null;
     private String ownerID = null;
-    private String coOwnerID = null;
+    private final String[] coOwnerIDs = new String[2];
     private String guildID = null;
     private String prefix = null;
 
@@ -29,8 +32,8 @@ public class Config {
         return ownerID;
     }
 
-    public String getCoOwnerID() {
-        return coOwnerID;
+    public String[] getCoOwnerIDs() {
+        return coOwnerIDs;
     }
 
     public String getGuildID() {
@@ -62,11 +65,17 @@ public class Config {
                 log.debug("Owner id loaded successfully");
             }
 
-            this.coOwnerID = configFile.get("coowner_id").getAsString();
-            if (coOwnerID == null) {
-                log.error("Co-Owner failed to load");
-            } else {
-                log.debug("Co-Owner loaded successfully");
+            JsonArray coownerArray = configFile.getAsJsonArray("coowner_ids");
+            for (int i = 0; i < coownerArray.size(); i++) {
+                if (i != coownerArray.size()) {
+                    coOwnerIDs[i] = coownerArray.get(i).getAsString();
+                }
+            }
+           if (coOwnerIDs.length > 0 && coOwnerIDs.length <= 2){
+                log.error("CoOwners ID's is wrong size, ID's loaded are " + Arrays.toString(coOwnerIDs));
+            }
+            else {
+                log.info("Co-Owners loaded successfully ");
             }
 
             this.guildID = configFile.get("guild").getAsString();
