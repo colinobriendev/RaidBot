@@ -1,11 +1,10 @@
-package com.ap3xtbh.raidbot.commands.util;
+package com.bp3x.raidbot.commands.util;
 
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 
@@ -20,10 +19,10 @@ public class Event {
     }
 
     // constant strings to retrieve json file entries for events
-    private final String JSON_LONG_NAME = "long_name";
-    private final String JSON_TYPE = "type";
-    private final String JSON_PLAYER_COUNT = "player_count";
-    private final String JSON_EXACT_PLAYER_COUNT = "exact_player_count";
+    private static final String JSON_LONG_NAME = "long_name";
+    private static final String JSON_TYPE = "type";
+    private static final String JSON_PLAYER_COUNT = "player_count";
+    private static final String JSON_EXACT_PLAYER_COUNT = "exact_player_count";
     private String shortName;
     private String longName;
     private String type;

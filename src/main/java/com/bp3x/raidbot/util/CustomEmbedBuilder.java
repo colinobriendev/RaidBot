@@ -1,4 +1,4 @@
-package com.ap3xtbh.raidbot.util;
+package com.bp3x.raidbot.util;
 
 import net.dv8tion.jda.api.EmbedBuilder;
 

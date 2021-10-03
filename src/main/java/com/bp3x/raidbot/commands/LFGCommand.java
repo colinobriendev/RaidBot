@@ -1,6 +1,6 @@
-package com.ap3xtbh.raidbot.commands;
+package com.bp3x.raidbot.commands;
 
-import com.ap3xtbh.raidbot.commands.util.LFGEmbedBuilder;
+import com.bp3x.raidbot.commands.util.LFGEmbedBuilder;
 import com.jagrosh.jdautilities.command.Command;
 import com.jagrosh.jdautilities.command.CommandEvent;
 import net.dv8tion.jda.api.entities.Message;
@@ -20,7 +20,6 @@ public class LFGCommand extends Command {
         this.guildOnly = false;
         this.ownerCommand = false;
         this.category = new Category("General");
-
     }
 
     @Override

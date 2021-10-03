@@ -1,4 +1,4 @@
-package com.ap3xtbh.raidbot.commands.util;
+package com.bp3x.raidbot.commands.util;
 
 import com.jagrosh.jdautilities.command.CommandEvent;
 import net.dv8tion.jda.api.EmbedBuilder;
@@ -14,16 +14,13 @@ import java.time.Instant;
 public class LFGEmbedBuilder extends EmbedBuilder {
     private final Logger log = LoggerFactory.getLogger(LFGEmbedBuilder.class);
 
-    private final String PLAYER_COUNT = "Player Count: ";
-    private final String PLAYERS_NEEDED = "Players Needed:";
-    private final String ACCEPTED_PLAYERS = "Accepted Players:";
-    private final String DECLINED_PLAYERS = "Declined Players:";
-    private final String TENTATIVE_PLAYERS = "Tentative Players:";
+    private static final String PLAYER_COUNT = "Player Count: ";
+    private static final String PLAYERS_NEEDED = "Players Needed:";
+    private static final String ACCEPTED_PLAYERS = "Accepted Players:";
+    private static final String DECLINED_PLAYERS = "Declined Players:";
+    private static final String TENTATIVE_PLAYERS = "Tentative Players:";
 
     public LFGEmbedBuilder(CommandEvent event) {
-
-        Logger log = LoggerFactory.getLogger(LFGEmbedBuilder.class);
-
         String eventShortName = event.getArgs();
         Event plannedEvent = new Event(eventShortName);
 
