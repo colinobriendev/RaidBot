@@ -1,33 +1,28 @@
 package com.bp3x.raidbot.util;
 
-import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
-import net.dv8tion.jda.api.JDA;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
-import java.util.Arrays;
 
 
 /**
- * Pull data from bot config json
+ * POJO class to parse config.json file
  */
 public class Config {
     private final Logger log = LoggerFactory.getLogger(Config.class);
-
     private String token = null;
     private String ownerID = null;
-    private final String[] coOwnerIDs = new String[2];
-    private String guildID = null;
     private String prefix = null;
-    private final JDA jda;
-
-    public Config(JDA passedJDA) {
-        jda = passedJDA;
-    }
+    private String[] coOwnerIDs;
+    //keys from config.json file
+    private static final String TOKEN_KEY = "token";
+    private static final String OWNER_KEY = "owner_id";
+    private static final String CO_OWNER_KEY = "coowner_ids";
+    private static final String PREFIX_KEY = "prefix";
 
     public String getToken() {
         return token;
@@ -41,10 +36,6 @@ public class Config {
         return coOwnerIDs;
     }
 
-    public String getGuildID() {
-        return guildID;
-    }
-
     public String getPrefix() {
         return prefix;
     }
@@ -56,53 +47,19 @@ public class Config {
             JsonElement element = JsonParser.parseReader(new FileReader("config.json"));
             JsonObject configFile = element.getAsJsonObject();
 
-            this.token = configFile.get("token").getAsString();
-            if (token == null) {
-                log.error("Token failed to load.");
-                jda.shutdown();
-            } else {
-                log.info("Token loaded successfully");
-            }
+            this.token = RaidBotUtils.getValueFromJSON(TOKEN_KEY, configFile);
+            this.ownerID = RaidBotUtils.getValueFromJSON(OWNER_KEY, configFile);
+            this.coOwnerIDs = RaidBotUtils.getArrayValueFromJSON(CO_OWNER_KEY, configFile, 2);
+            this.prefix = RaidBotUtils.getValueFromJSON(PREFIX_KEY, configFile);
 
-            this.ownerID = configFile.get("owner_id").getAsString();
-            if (ownerID == null) {
-                log.error("Owner id failed to load");
-                jda.shutdown();
-            } else {
-                log.debug("Owner id loaded successfully");
-            }
 
-            JsonArray coownerArray = configFile.getAsJsonArray("coowner_ids");
-            for (int i = 0; i < coownerArray.size(); i++) {
-                    coOwnerIDs[i] = coownerArray.get(i).getAsString();
-            }
-           if (coOwnerIDs.length != 2){
-                log.error("CoOwners ID's is wrong size, ID's loaded are " + Arrays.toString(coOwnerIDs));
-                jda.shutdown();
-            }
-            else {
-                log.info("Co-Owners loaded successfully ");
-            }
+        } catch (RaidBotRuntimeException rte) {
+            log.error("There was an error parsing the json file. Exiting.", rte);
 
-            this.guildID = configFile.get("guild").getAsString();
-            if (guildID == null) {
-                log.error("Guild ID failed to load");
-                jda.shutdown();
-            } else {
-                log.info("Guild ID loaded successfully");
-            }
-
-            this.prefix = configFile.get("prefix").getAsString();
-            if (prefix == null) {
-                log.error("Prefix failed to load");
-                jda.shutdown();
-            } else {
-                log.debug("Prefix loaded successfully");
-            }
-
+        // must throw System.exit because JDA isn't initialized before Config parsing
         } catch (FileNotFoundException e) {
-            log.error("Config json file not found", e);
-            jda.shutdown();
+            log.error("Config json file not found. Exiting.", e);
+            System.exit(1);
         }
     }
 }

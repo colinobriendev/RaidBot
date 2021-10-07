@@ -1,6 +1,7 @@
 package com.bp3x.raidbot.commands;
 
 import com.bp3x.raidbot.commands.util.LFGEmbedBuilder;
+import com.bp3x.raidbot.util.RaidBotRuntimeException;
 import com.jagrosh.jdautilities.command.Command;
 import com.jagrosh.jdautilities.command.CommandEvent;
 import net.dv8tion.jda.api.entities.Message;
@@ -22,13 +23,20 @@ public class LFGCommand extends Command {
         this.category = new Category("General");
     }
 
-    @Override
+@Override
     protected void execute(CommandEvent event) {
         log.info("LFG command by: " + event.getAuthor().getName() + "#" + event.getAuthor().getDiscriminator());
         log.info("Wants to schedule " + event.getArgs());
 
-        LFGEmbedBuilder builder = new LFGEmbedBuilder(event);
+        LFGEmbedBuilder builder = null;
+        try {
+            builder = new LFGEmbedBuilder(event);
+            Message success = event.getChannel().sendMessage(builder.build()).complete();
 
-        Message success = event.getChannel().sendMessage(builder.build()).complete();
+        } catch (NullPointerException npe) {
+            log.error("LFGEmbedBuilder was null, did not initialize", npe);
+        } catch (RaidBotRuntimeException e) {
+            log.error("Caught RaidBotRuntimeException while creating LFGEmbedBuilder.", e);
+        }
     }
 }

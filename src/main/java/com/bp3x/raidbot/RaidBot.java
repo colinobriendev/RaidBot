@@ -23,7 +23,7 @@ public class RaidBot {
 
         final String LOADING = "Loading...";
 
-        Config config = new Config(jda);
+        Config config = new Config();
         config.load();
 
         CommandClientBuilder client = new CommandClientBuilder();
@@ -59,14 +59,16 @@ public class RaidBot {
      */
     private static void handleCoOwnerIDs(CommandClientBuilder builder, Config config) {
         String[] coOwners = config.getCoOwnerIDs();
-        if (coOwners.length == 2)
-        {
+        if (coOwners.length == 2) {
             String coOwner1 = coOwners[0];
             String coOwner2 = coOwners[1];
             builder.setCoOwnerIds(coOwner1, coOwner2);
-        }
-        else {
+        } else {
             log.error("Problem initializing coOwner ID's!");
         }
+    }
+
+    public static JDA getJDA() {
+        return jda;
     }
 }
