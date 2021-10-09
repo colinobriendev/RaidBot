@@ -3,10 +3,13 @@ package com.bp3x.raidbot.commands.util;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
+import net.dv8tion.jda.api.entities.User;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
 import java.io.FileNotFoundException;
 import java.io.FileReader;
+import java.util.ArrayList;
 
 /**
  * Represents an event that can be scheduled in the LFG command.
@@ -28,6 +31,9 @@ public class Event {
     private String type;
     private int playerCount = 0;
     private boolean exactPlayerCount = false;
+    private java.util.ArrayList<User> acceptedPlayers;
+    private ArrayList<User> declinedPlayers;
+    private ArrayList<User> tentativePlayers;
 
     public Event(String shortName) {
         this.shortName = shortName;
@@ -53,6 +59,12 @@ public class Event {
     public boolean isExactPlayerCount() {
         return exactPlayerCount;
     }
+
+    public ArrayList<User> getAcceptedPlayers() { return acceptedPlayers; }
+
+    public ArrayList<User> getDeclinedPlayers() { return declinedPlayers; }
+
+    public ArrayList<User> getTentativePlayers() { return tentativePlayers; }
 
     public String getJSON_LONG_NAME() {
         return JSON_LONG_NAME;
@@ -108,5 +120,48 @@ public class Event {
         }
     }
 
+    /**
+     * Checks whether a given event is currently defined in event config json.
+     * @param shortName - event shortname to test existence for
+     */
+    public static boolean eventExists(String shortName) {
+        try {
+            JsonElement element = JsonParser.parseReader(new FileReader("event.json"));
+            JsonObject eventConfig = element.getAsJsonObject();
 
+            return eventConfig.has(shortName);
+        } catch (FileNotFoundException e) {
+            log.error("Unable to find event json file.", e);
+        }
+        return false;
+    }
+
+    /**
+     * Registers a user's availability for the event, removing existing status if present
+     * @param player - The user to RSVP for the event
+     * @param status - The status to set the player as for the event
+     */
+    public void setPlayerStatus(User player, EventPlayerStatus status) {
+        acceptedPlayers.remove(player);
+        declinedPlayers.remove(player);
+        tentativePlayers.remove(player);
+
+        switch(status) {
+            case ACCEPTED:
+                acceptedPlayers.add(player);
+                break;
+            case DECLINED:
+                declinedPlayers.add(player);
+                break;
+            case TENTATIVE:
+                tentativePlayers.add(player);
+                break;
+        }
+    }
+
+    public enum EventPlayerStatus {
+        ACCEPTED,
+        DECLINED,
+        TENTATIVE
+    }
 }
