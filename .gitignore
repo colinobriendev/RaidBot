@@ -13,6 +13,7 @@ event.json
 .idea/usage.statistics.xml
 .idea/shelf
 .idea/sonarlint
+.idea/discord.xml
 
 # Mobile Tools for Java (J2ME)
 .mtj.tmp/
