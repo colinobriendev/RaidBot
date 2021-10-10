@@ -1,10 +1,12 @@
 package com.bp3x.raidbot.commands;
 
+import com.bp3x.raidbot.commands.util.Event;
 import com.bp3x.raidbot.commands.util.LFGEmbedBuilder;
 import com.bp3x.raidbot.util.RaidBotRuntimeException;
 import com.jagrosh.jdautilities.command.Command;
 import com.jagrosh.jdautilities.command.CommandEvent;
 import net.dv8tion.jda.api.entities.Message;
+import net.dv8tion.jda.api.requests.RestAction;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -23,20 +25,37 @@ public class LFGCommand extends Command {
         this.category = new Category("General");
     }
 
-@Override
+    @Override
     protected void execute(CommandEvent event) {
         log.info("LFG command by: " + event.getAuthor().getName() + "#" + event.getAuthor().getDiscriminator());
         log.info("Wants to schedule " + event.getArgs());
 
-        LFGEmbedBuilder builder = null;
-        try {
-            builder = new LFGEmbedBuilder(event);
-            Message success = event.getChannel().sendMessage(builder.build()).complete();
+        String[] args = event.getArgs().split("\\s+");
+        if (args.length > 0) {
+            if (Event.eventExists(args[0])) {
+                try {
+                    Event plannedEvent = new Event(args[0]);
+                    plannedEvent.setPlayerStatus(event.getMember(), Event.EventPlayerStatus.ACCEPTED);
 
-        } catch (NullPointerException npe) {
-            log.error("LFGEmbedBuilder was null, did not initialize", npe);
-        } catch (RaidBotRuntimeException e) {
-            log.error("Caught RaidBotRuntimeException while creating LFGEmbedBuilder.", e);
+                    LFGEmbedBuilder builder = new LFGEmbedBuilder(plannedEvent);
+                    Message success = event.getChannel().sendMessage(builder.build()).complete();
+
+                    RestAction<Void> reactWhiteCheckMark = success.addReaction("✅");
+                    RestAction<Void> reactQuestion = success.addReaction("❓");
+                    RestAction<Void> reactCross = success.addReaction("❌");
+
+                    RestAction.allOf(reactWhiteCheckMark, reactQuestion, reactCross).queue();
+
+                    plannedEvent.registerEvent(success);
+                } catch (RaidBotRuntimeException e) {
+                    event.getChannel().sendMessage("Critical failure occurred while creating event, " +
+                            "shutting bot down because something is deeply wrong.").queue();
+                }
+            } else {
+                // no such event
+            }
+        } else {
+            // insufficient arguments, send a msg to the user about it
         }
     }
 }
