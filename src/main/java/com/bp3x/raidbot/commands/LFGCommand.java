@@ -10,11 +10,15 @@ import net.dv8tion.jda.api.requests.RestAction;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.HashMap;
+
 /**
  * LFG Command to schedule events
  */
 public class LFGCommand extends Command {
     private final Logger log = LoggerFactory.getLogger(LFGCommand.class);
+
+    private static HashMap<Event, Message> plannedEventsList = new HashMap<>();
 
     public LFGCommand() {
         this.name = "lfg";
@@ -24,6 +28,8 @@ public class LFGCommand extends Command {
         this.ownerCommand = false;
         this.category = new Category("General");
     }
+
+    public HashMap<Event, Message> getPlannedEventsList() { return plannedEventsList; }
 
     @Override
     protected void execute(CommandEvent event) {
