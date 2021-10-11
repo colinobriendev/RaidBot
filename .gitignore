@@ -14,6 +14,7 @@ event.json
 .idea/shelf
 .idea/sonarlint
 .idea/discord.xml
+.idea/remote-targets.xml
 
 # Mobile Tools for Java (J2ME)
 .mtj.tmp/
