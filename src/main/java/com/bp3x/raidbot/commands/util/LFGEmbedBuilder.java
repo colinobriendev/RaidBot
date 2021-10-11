@@ -34,11 +34,11 @@ public class LFGEmbedBuilder extends RaidBotEmbedBuilder {
         String acceptedPlayersString = constructPlayersList(plannedEvent.getAcceptedPlayers());
         this.addField(ACCEPTED_PLAYERS, acceptedPlayersString, true);
 
-        String declinedPlayersString = constructPlayersList(plannedEvent.getDeclinedPlayers());
-        this.addField(DECLINED_PLAYERS, declinedPlayersString, true);
-
         String tentativePlayersString = constructPlayersList(plannedEvent.getTentativePlayers());
         this.addField(TENTATIVE_PLAYERS, tentativePlayersString, true);
+
+        String declinedPlayersString = constructPlayersList(plannedEvent.getDeclinedPlayers());
+        this.addField(DECLINED_PLAYERS, declinedPlayersString, true);
     }
 
     private String constructPlayersList(ArrayList<Member> playerList) {

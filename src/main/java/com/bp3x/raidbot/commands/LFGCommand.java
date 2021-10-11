@@ -38,30 +38,30 @@ public class LFGCommand extends Command {
 
         String[] args = event.getArgs().split("\\s+");
         if (args.length > 0) {
-            if (Event.eventExists(args[0])) {
-                try {
-                    Event plannedEvent = new Event(args[0]);
-                    plannedEvent.setPlayerStatus(event.getMember(), Event.EventPlayerStatus.ACCEPTED);
+            try {
+                if (Event.eventExists(args[0])) {
+                        Event plannedEvent = new Event(args[0]);
+                        plannedEvent.setPlayerStatus(event.getMember(), Event.EventPlayerStatus.ACCEPTED);
 
-                    LFGEmbedBuilder builder = new LFGEmbedBuilder(plannedEvent);
-                    Message success = event.getChannel().sendMessage(builder.build()).complete();
+                        LFGEmbedBuilder builder = new LFGEmbedBuilder(plannedEvent);
+                        Message success = event.getChannel().sendMessage(builder.build()).complete();
 
-                    RestAction<Void> reactWhiteCheckMark = success.addReaction("✅");
-                    RestAction<Void> reactQuestion = success.addReaction("❓");
-                    RestAction<Void> reactCross = success.addReaction("❌");
+                        RestAction<Void> reactWhiteCheckMark = success.addReaction("✅");
+                        RestAction<Void> reactQuestion = success.addReaction("❓");
+                        RestAction<Void> reactCross = success.addReaction("❌");
 
-                    RestAction.allOf(reactWhiteCheckMark, reactQuestion, reactCross).queue();
+                        RestAction.allOf(reactWhiteCheckMark, reactQuestion, reactCross).queue();
 
-                    plannedEvent.registerEvent(success);
-                } catch (RaidBotRuntimeException e) {
-                    event.getChannel().sendMessage("Critical failure occurred while creating event, " +
-                            "shutting bot down because something is deeply wrong.").queue();
+                        plannedEvent.registerEvent(success);
+                } else {
+                    event.getChannel().sendMessage("That event does not exist").queue();
                 }
-            } else {
-                // no such event
+            } catch (RaidBotRuntimeException e) {
+                event.getChannel().sendMessage("Critical failure occurred while creating event, " +
+                        "shutting bot down because something is deeply wrong.").queue();
             }
         } else {
-            // insufficient arguments, send a msg to the user about it
+            event.getChannel().sendMessage("No activity specified").queue();
         }
     }
 }

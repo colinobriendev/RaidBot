@@ -141,16 +141,15 @@ public class Event {
      * Checks whether a given event is currently defined in event config json.
      * @param shortName - event shortname to test existence for
      */
-    public static boolean eventExists(String shortName) {
+    public static boolean eventExists(String shortName) throws RaidBotRuntimeException {
         try {
             JsonElement element = JsonParser.parseReader(new FileReader("event.json"));
             JsonObject eventConfig = element.getAsJsonObject();
 
             return eventConfig.has(shortName);
         } catch (FileNotFoundException e) {
-            log.error("Unable to find event json file.", e);
+            throw new RaidBotRuntimeException("Unable to find event json file.");
         }
-        return false;
     }
 
     /**
