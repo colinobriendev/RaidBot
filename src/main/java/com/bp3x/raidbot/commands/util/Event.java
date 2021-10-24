@@ -1,7 +1,7 @@
 package com.bp3x.raidbot.commands.util;
 
+import com.bp3x.raidbot.util.RaidBotJsonUtils;
 import com.bp3x.raidbot.util.RaidBotRuntimeException;
-import com.bp3x.raidbot.util.RaidBotUtils;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
@@ -9,10 +9,9 @@ import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.entities.Message;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
 import java.io.FileNotFoundException;
 import java.io.FileReader;
-import java.time.LocalDateTime;
+import java.time.ZonedDateTime;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Random;
@@ -36,20 +35,20 @@ public class Event {
     private final ArrayList<Member> declinedPlayers = new ArrayList<>();
     private final ArrayList<Member> tentativePlayers = new ArrayList<>();
     private final String eventId;
-    private final LocalDateTime time;
+    private final ZonedDateTime dateTime;
 
-    public Event(String shortName) throws RaidBotRuntimeException {
+    public Event(String shortName, ZonedDateTime dateTime) throws RaidBotRuntimeException {
         this.shortName = shortName;
-        this.time = LocalDateTime.now();
+        this.dateTime = dateTime;
 
         Random rand = new Random();
-        this.eventId = String.valueOf(this.time.getMonthValue()) +
-                this.time.getDayOfMonth() +
+        this.eventId = String.valueOf(this.dateTime.getMonthValue()) +
+                this.dateTime.getDayOfMonth() +
                 rand.nextInt(10);
 
         load(shortName);
 
-        log.info("Created Event \"" + shortName + "\" scheduled for " + this.time + " with event ID " + this.eventId);
+        log.info("Created Event \"" + shortName + "\" scheduled for " + this.dateTime + " with event ID " + this.eventId);
     }
 
     public static HashMap<Event, Message> getPlannedEventsList() { return plannedEventsList; }
@@ -74,8 +73,7 @@ public class Event {
 
     public String getEventId() { return eventId; }
 
-    public LocalDateTime getTime() { return time; }
-
+    public ZonedDateTime getTime() { return dateTime; }
 
     public enum EventPlayerStatus {
         ACCEPTED,
@@ -95,8 +93,8 @@ public class Event {
             // need an additional object to hold the specific event and its values
             JsonObject eventAsJSON = eventConfig.getAsJsonObject(shortName);
 
-            this.longName = RaidBotUtils.getValueFromJSON(LONG_NAME_KEY, eventAsJSON);
-            this.playerCount = Integer.parseInt(RaidBotUtils.getValueFromJSON(PLAYER_COUNT_KEY, eventAsJSON));
+            this.longName = RaidBotJsonUtils.getValueFromJSON(LONG_NAME_KEY, eventAsJSON);
+            this.playerCount = Integer.parseInt(RaidBotJsonUtils.getValueFromJSON(PLAYER_COUNT_KEY, eventAsJSON));
 
         } catch (RuntimeException rte) {
             throw new RaidBotRuntimeException("There was an error parsing the event.json file. Shutting down the bot.");
