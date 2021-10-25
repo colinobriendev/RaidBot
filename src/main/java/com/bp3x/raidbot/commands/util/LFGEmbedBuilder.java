@@ -14,6 +14,7 @@ public class LFGEmbedBuilder extends RaidBotEmbedBuilder {
     private final Logger log = LoggerFactory.getLogger(LFGEmbedBuilder.class);
 
     private static final String PLAYER_COUNT = "Player Count: ";
+    private static final String EVENT_ID = "Event ID: ";
     private static final String ACCEPTED_PLAYERS = "Accepted Players:";
     private static final String DECLINED_PLAYERS = "Declined Players:";
     private static final String TENTATIVE_PLAYERS = "Tentative Players:";
@@ -30,6 +31,8 @@ public class LFGEmbedBuilder extends RaidBotEmbedBuilder {
                 plannedEvent.getTentativePlayers().size() +
                 " tentative";
         this.addField(PLAYER_COUNT, playerCountStringBuilder, false);
+
+        this.addField(EVENT_ID, plannedEvent.getEventId(), false);
 
         String acceptedPlayersString = constructPlayersList(plannedEvent.getAcceptedPlayers());
         this.addField(ACCEPTED_PLAYERS, acceptedPlayersString, true);

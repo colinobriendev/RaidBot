@@ -158,7 +158,7 @@ public class Event {
      * @param id - event id to search for
      */
     public static Event getEventById(String id) {
-        for (int i = 0; i < plannedEventsList.size() - 1; i++) {
+        for (int i = 0; i < plannedEventsList.size(); i++) {
             Event[] eventsList = plannedEventsList.keySet().toArray(new Event[0]);
             if (eventsList[i].getEventId().equals(id)) {
                 return eventsList[i];
