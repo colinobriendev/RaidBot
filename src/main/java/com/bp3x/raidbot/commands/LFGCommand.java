@@ -14,6 +14,7 @@ import org.slf4j.LoggerFactory;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeParseException;
 import java.util.ArrayList;
 import java.util.HashMap;
 
@@ -30,7 +31,7 @@ public class LFGCommand extends Command {
 
     private static final String TIMESTAMP_PATTERN = "MM/dd/yy hh:mma";
 
-    private static HashMap<Event, Message> plannedEventsList = new HashMap<>();
+    private static final HashMap<Event, Message> plannedEventsList = new HashMap<>();
 
     public LFGCommand() {
         this.name = "lfg";
@@ -68,21 +69,32 @@ public class LFGCommand extends Command {
         String activityString = args[0];
         String dateTimeString = args[1] + " " + args[2].toUpperCase();
 
+        ZonedDateTime eventDateTime = null;
+        try {
+            // look up the full name for the zone id (ex: "PST" -> "America/Los_Angeles"
+            // this ensures daylight savings is factored in
+            String zoneId;
+            HashMap<String, String> timezoneIdNameMapping = RaidBot.getConfig().getTimezones();
+            zoneId = timezoneIdNameMapping.get(userTimezoneRole.getName());
+
+            // parse timestamp provided by user, using their role to convert from their timezone to GMT
+            DateTimeFormatter userTimestampFormatter = DateTimeFormatter
+                    .ofPattern(TIMESTAMP_PATTERN)
+                    .withZone(ZoneId.of(zoneId));
+            eventDateTime = ZonedDateTime.from(userTimestampFormatter.parse(dateTimeString));
+            eventDateTime.withZoneSameInstant(ZoneId.of("GMT"));
+
+            if (eventDateTime.isBefore(ZonedDateTime.now())) {
+                event.getChannel().sendMessage("Cannot schedule an event in the past.").queue();
+                return;
+            }
+        } catch (DateTimeParseException e) {
+            event.getChannel().sendMessage("Invalid date/time argument.").queue();
+            return;
+        }
+
         try {
             if (Event.eventExists(activityString)) {
-                // look up the full name for the zone id (ex: "PST" -> "America/Los_Angeles"
-                // this ensures daylight savings is factored in
-                String zoneId;
-                HashMap<String, String> timezoneIdNameMapping = RaidBot.getConfig().getTimezones();
-                zoneId = timezoneIdNameMapping.get(userTimezoneRole.getName());
-
-                // parse timestamp provided by user, using their role to convert from their timezone to GMT
-                DateTimeFormatter userTimestampFormatter = DateTimeFormatter
-                        .ofPattern(TIMESTAMP_PATTERN)
-                        .withZone(ZoneId.of(zoneId));
-                ZonedDateTime eventDateTime = ZonedDateTime.from(userTimestampFormatter.parse(dateTimeString));
-                eventDateTime.withZoneSameInstant(ZoneId.of("GMT"));
-
                 Event plannedEvent = new Event(activityString, eventDateTime);
                 plannedEvent.setPlayerStatus(event.getMember(), Event.EventPlayerStatus.ACCEPTED);
                 LFGEmbedBuilder builder = new LFGEmbedBuilder(plannedEvent);
@@ -100,8 +112,7 @@ public class LFGCommand extends Command {
                 event.getChannel().sendMessage("That event does not exist").queue();
             }
         } catch (RaidBotRuntimeException e) {
-            event.getChannel().sendMessage("Error occurred while creating event, " +
-                    "shutting bot down because something is deeply wrong.").queue();
+            event.getChannel().sendMessage("Error occurred while creating event.").queue();
         }
     }
 }
