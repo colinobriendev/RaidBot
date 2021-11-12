@@ -5,13 +5,12 @@ import com.google.gson.JsonObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class RaidBotUtils {
+public class RaidBotJsonUtils {
 
-    private static final Logger log = LoggerFactory.getLogger(RaidBotUtils.class);
+    private static final Logger log = LoggerFactory.getLogger(RaidBotJsonUtils.class);
 
     /* Utility class */
-    private RaidBotUtils() {
-    }
+    private RaidBotJsonUtils() { }
 
     /**
      * Method to parse json config files

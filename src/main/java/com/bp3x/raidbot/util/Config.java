@@ -1,13 +1,16 @@
 package com.bp3x.raidbot.util;
 
+import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
+import net.dv8tion.jda.api.entities.Role;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
-
+import java.util.ArrayList;
+import java.util.HashMap;
 
 /**
  * POJO class to parse config.json file
@@ -18,11 +21,17 @@ public class Config {
     private String ownerID = null;
     private String prefix = null;
     private String[] coOwnerIDs;
-    //keys from config.json file
+    private final HashMap<String, String> timezones = new HashMap<>();
+    private ArrayList<Role> timezoneRoles = new ArrayList<>();
+
+    // keys from config.json file
     private static final String TOKEN_KEY = "token";
     private static final String OWNER_KEY = "owner_id";
     private static final String CO_OWNER_KEY = "coowner_ids";
     private static final String PREFIX_KEY = "prefix";
+    private static final String TIMEZONES_KEY = "timezones";
+    private static final String TIMEZONES_ID_KEY = "id";
+    private static final String TIMEZONES_FULL_NAME_KEY = "full_name";
 
     public String getToken() {
         return token;
@@ -40,6 +49,12 @@ public class Config {
         return prefix;
     }
 
+    public HashMap<String, String> getTimezones() { return timezones; }
+
+    public void setTimezoneRoles(ArrayList<Role> roles) { this.timezoneRoles = roles; }
+
+    public ArrayList<Role> getTimezoneRoles() { return timezoneRoles; }
+
     public void load() {
         log.info("Loading Bot configuration.");
 
@@ -47,12 +62,26 @@ public class Config {
             JsonElement element = JsonParser.parseReader(new FileReader("config.json"));
             JsonObject configFile = element.getAsJsonObject();
 
-            this.token = RaidBotUtils.getValueFromJSON(TOKEN_KEY, configFile);
-            this.ownerID = RaidBotUtils.getValueFromJSON(OWNER_KEY, configFile);
-            this.coOwnerIDs = RaidBotUtils.getArrayValueFromJSON(CO_OWNER_KEY, configFile, 2);
-            this.prefix = RaidBotUtils.getValueFromJSON(PREFIX_KEY, configFile);
+            this.token = RaidBotJsonUtils.getValueFromJSON(TOKEN_KEY, configFile);
+            this.ownerID = RaidBotJsonUtils.getValueFromJSON(OWNER_KEY, configFile);
+            this.coOwnerIDs = RaidBotJsonUtils.getArrayValueFromJSON(CO_OWNER_KEY, configFile, 2);
+            this.prefix = RaidBotJsonUtils.getValueFromJSON(PREFIX_KEY, configFile);
 
+            // parse timezones as a hashmap
+            JsonArray timezonesJsonArray = configFile.get(TIMEZONES_KEY).getAsJsonArray();
+            for (JsonElement tzElement : timezonesJsonArray) {
+                JsonObject tzObject = tzElement.getAsJsonObject();
 
+                String id = tzObject.get(TIMEZONES_ID_KEY).getAsString();
+                String fullName = tzObject.get(TIMEZONES_FULL_NAME_KEY).getAsString();
+
+                if (id.isBlank() || fullName.isBlank()) {
+                    log.error("Parsed incomplete timezone information.");
+                    throw new RaidBotRuntimeException("Incomplete timezone information, there are errors in the config file.");
+                }
+
+                timezones.put(tzObject.get(TIMEZONES_ID_KEY).getAsString(), tzObject.get(TIMEZONES_FULL_NAME_KEY).getAsString());
+            }
         } catch (RaidBotRuntimeException rte) {
             log.error("There was an error parsing the json file. Exiting.", rte);
 
