@@ -1,0 +1,81 @@
+package com.bp3x.raidbot.commands.lfg;
+
+import com.bp3x.raidbot.commands.lfg.util.Event;
+import com.bp3x.raidbot.commands.lfg.util.LFGEmbedBuilder;
+import net.dv8tion.jda.api.entities.Member;
+import net.dv8tion.jda.api.entities.Message;
+import net.dv8tion.jda.api.entities.User;
+import net.dv8tion.jda.api.events.message.react.GenericMessageReactionEvent;
+import net.dv8tion.jda.api.events.message.react.MessageReactionAddEvent;
+import net.dv8tion.jda.api.events.message.react.MessageReactionRemoveEvent;
+import net.dv8tion.jda.api.hooks.ListenerAdapter;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.util.HashMap;
+
+public class LFGReactionListener extends ListenerAdapter {
+
+    Logger log = LoggerFactory.getLogger(LFGReactionListener.class);
+
+    @Override
+    public void onMessageReactionAdd(MessageReactionAddEvent addEvent) {
+       handleReactionEvent(addEvent);
+    }
+
+    @Override
+    public void onMessageReactionRemove(MessageReactionRemoveEvent removeEvent) {
+        handleReactionEvent(removeEvent);
+    }
+
+    /**
+     * Method to handle either a MessageReactionAddEvent or MessageReactionRemoveEvent to update the embed then remove the reaction.
+     * @param reactionEvent the MessageReaction event needing to be handled
+     */
+    private void handleReactionEvent(GenericMessageReactionEvent reactionEvent) {
+        String reactionEmoji = reactionEvent.getReactionEmote().getName();
+
+        // ignore bot reactions
+        if (reactionEvent.getUser().isBot() || !LFGConstants.EMOJI_LIST.contains(reactionEmoji)) return;
+
+        else {
+            Message message = reactionEvent.getChannel().retrieveMessageById(reactionEvent.getMessageId()).complete();
+            rebuildEmbed(message, reactionEmoji, reactionEvent.getMember());
+            reactionEvent.getReaction().removeReaction(reactionEvent.getUser()).queue();
+        }
+    }
+
+    /**
+     * Rebuilds the Embed based on the choice processed by handleReactionEvent
+     * @param message
+     * @param reactionEmoji
+     * @param member
+     */
+    private void rebuildEmbed(Message message, String reactionEmoji, Member member) {
+        HashMap<Message, Event> plannedEventsList = Event.getPlannedEventsList();
+        Event event = plannedEventsList.get(message);
+        setPlayerStatusEmbed(reactionEmoji, event, member);
+        LFGEmbedBuilder embed = new LFGEmbedBuilder(event);
+        message.editMessage(embed.build()).queue();
+    }
+
+    /**
+     * Handles setting user in the appropriate list for the event based on the reaction they chose in the embed
+     * @param reactionEmoji
+     * @param event
+     * @param member
+     */
+    private void setPlayerStatusEmbed(String reactionEmoji, Event event, Member member) {
+        switch(reactionEmoji) {
+            case LFGConstants.ACCEPTED_EMOJI:
+                event.setPlayerStatus(member, Event.EventPlayerStatus.ACCEPTED);
+                break;
+            case LFGConstants.TENTATIVE_EMOJI:
+                event.setPlayerStatus(member, Event.EventPlayerStatus.TENTATIVE);
+                break;
+            case LFGConstants.DECLINED_EMOJI:
+                event.setPlayerStatus(member, Event.EventPlayerStatus.DECLINED);
+                break;
+        }
+    }
+}

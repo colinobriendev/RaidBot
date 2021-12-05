@@ -1,6 +1,7 @@
 package com.bp3x.raidbot;
 
-import com.bp3x.raidbot.commands.LFGCommand;
+import com.bp3x.raidbot.commands.lfg.LFGCommand;
+import com.bp3x.raidbot.commands.lfg.LFGReactionListener;
 import com.bp3x.raidbot.util.Config;
 import com.bp3x.raidbot.util.RaidBotGuildUtils;
 import com.jagrosh.jdautilities.command.CommandClientBuilder;
@@ -82,6 +83,9 @@ public class RaidBot extends ListenerAdapter {
                         waiter,
                         client.build(),
                         new RaidBot())
+
+                // add our event listeners
+                .addEventListeners(new LFGReactionListener())
 
                 .build();
     }
