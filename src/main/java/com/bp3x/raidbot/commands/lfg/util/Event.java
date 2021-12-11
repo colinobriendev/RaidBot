@@ -80,7 +80,6 @@ public class Event {
 
     /**
      * Load event information from event config json.
-     *
      * @param shortName - event shortname to load from.
      */
     public void load(String shortName) throws RaidBotRuntimeException {

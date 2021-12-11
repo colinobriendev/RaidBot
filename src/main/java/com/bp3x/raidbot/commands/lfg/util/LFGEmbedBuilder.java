@@ -39,9 +39,14 @@ public class LFGEmbedBuilder extends RaidBotEmbedBuilder {
         this.addField(LFGConstants.DECLINED_PLAYERS, declinedPlayersString, true);
     }
 
+    /**
+     * Generate a player list for the embed. This method ensures each player name is on a new line.
+     * @param playerList - The list of players that have voted for a particular option as Member objects
+     * @return - A string for the embed that shows each player's name on a new line
+     */
     private String constructPlayersList(ArrayList<Member> playerList) {
         if (playerList.isEmpty()) {
-            return ("[N/A]");
+            return (LFGConstants.BLANK_PLAYER_LIST);
         }
 
         StringBuilder playerListBuilder = new StringBuilder();

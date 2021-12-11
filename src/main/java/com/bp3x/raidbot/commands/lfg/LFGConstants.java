@@ -8,7 +8,7 @@ import java.util.List;
  */
 public class LFGConstants {
 
-    private LFGConstants(){};
+    private LFGConstants(){}
 
     /* emoji constants for reactions on LFG embed */
     public static final String ACCEPTED_EMOJI = "✅";
@@ -16,7 +16,7 @@ public class LFGConstants {
     public static final String DECLINED_EMOJI = "❌";
 
     /* list of strings containing our emoji constants */
-    public static final List<String> EMOJI_LIST = Arrays.asList(ACCEPTED_EMOJI, TENTATIVE_EMOJI, DECLINED_EMOJI);
+    protected static final List<String> EMOJI_LIST = Arrays.asList(ACCEPTED_EMOJI, TENTATIVE_EMOJI, DECLINED_EMOJI);
 
     /* timestamp pattern for LFG event */
     public static final String TIMESTAMP_PATTERN = "MM/dd/yy hh:mma";
@@ -32,5 +32,4 @@ public class LFGConstants {
     public static final String DECLINED_PLAYERS = "Declined Players:";
     public static final String TENTATIVE_PLAYERS = "Tentative Players:";
     public static final String BLANK_PLAYER_LIST = "[N/A]";
-    public static final String NEW_LINE = "\n";
 }

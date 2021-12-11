@@ -1,7 +1,6 @@
 package com.bp3x.raidbot.commands.lfg;
 
 import com.bp3x.raidbot.RaidBot;
-import com.bp3x.raidbot.commands.lfg.LFGConstants;
 import com.bp3x.raidbot.commands.lfg.util.*;
 import com.bp3x.raidbot.util.RaidBotRuntimeException;
 import com.jagrosh.jdautilities.command.Command;

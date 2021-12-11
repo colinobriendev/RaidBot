@@ -4,11 +4,11 @@ import com.bp3x.raidbot.commands.lfg.util.Event;
 import com.bp3x.raidbot.commands.lfg.util.LFGEmbedBuilder;
 import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.entities.Message;
-import net.dv8tion.jda.api.entities.User;
 import net.dv8tion.jda.api.events.message.react.GenericMessageReactionEvent;
 import net.dv8tion.jda.api.events.message.react.MessageReactionAddEvent;
 import net.dv8tion.jda.api.events.message.react.MessageReactionRemoveEvent;
 import net.dv8tion.jda.api.hooks.ListenerAdapter;
+import net.dv8tion.jda.api.requests.RestAction;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -39,31 +39,31 @@ public class LFGReactionListener extends ListenerAdapter {
         if (reactionEvent.getUser().isBot() || !LFGConstants.EMOJI_LIST.contains(reactionEmoji)) return;
 
         else {
-            Message message = reactionEvent.getChannel().retrieveMessageById(reactionEvent.getMessageId()).complete();
-            rebuildEmbed(message, reactionEmoji, reactionEvent.getMember());
-            reactionEvent.getReaction().removeReaction(reactionEvent.getUser()).queue();
+            reactionEvent.getChannel().retrieveMessageById(reactionEvent.getMessageId()).submit()
+                    .thenCompose((m) -> rebuildEmbed(m, reactionEmoji, reactionEvent.getMember()).submit())
+                    .thenCompose((e) -> reactionEvent.getReaction().removeReaction(reactionEvent.getUser()).submit());
         }
     }
 
     /**
      * Rebuilds the Embed based on the choice processed by handleReactionEvent
-     * @param message
-     * @param reactionEmoji
-     * @param member
+     * @param message - the message processed by the bot
+     * @param reactionEmoji - the reaction used on the message
+     * @param member - the user who did the reaction
      */
-    private void rebuildEmbed(Message message, String reactionEmoji, Member member) {
+    private RestAction<Message> rebuildEmbed(Message message, String reactionEmoji, Member member) {
         HashMap<Message, Event> plannedEventsList = Event.getPlannedEventsList();
         Event event = plannedEventsList.get(message);
         setPlayerStatusEmbed(reactionEmoji, event, member);
         LFGEmbedBuilder embed = new LFGEmbedBuilder(event);
-        message.editMessage(embed.build()).queue();
+        return message.editMessage(embed.build());
     }
 
     /**
      * Handles setting user in the appropriate list for the event based on the reaction they chose in the embed
-     * @param reactionEmoji
-     * @param event
-     * @param member
+     * @param reactionEmoji - the reaction emoji used
+     * @param event - our Event class instance
+     * @param member - the user who did the reaction
      */
     private void setPlayerStatusEmbed(String reactionEmoji, Event event, Member member) {
         switch(reactionEmoji) {
