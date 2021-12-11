@@ -16,7 +16,11 @@ public class LFGEmbedBuilder extends RaidBotEmbedBuilder {
 
     public LFGEmbedBuilder(Event plannedEvent) {
         this.setTitle(plannedEvent.getLongName());
-        this.setTimestamp(plannedEvent.getTime());
+
+        String timestamp = "<t:" +
+                plannedEvent.getTime().toEpochSecond() +
+                ":F>";
+        this.addField("Time", timestamp, false);
 
         String playerCountStringBuilder = "(" +
                 plannedEvent.getAcceptedPlayers().size() +
