@@ -82,7 +82,7 @@ public class LFGCommand extends Command {
                     .ofPattern(TIMESTAMP_PATTERN)
                     .withZone(ZoneId.of(zoneId));
             eventDateTime = ZonedDateTime.from(userTimestampFormatter.parse(dateTimeString));
-            eventDateTime.withZoneSameInstant(ZoneId.of("GMT"));
+            eventDateTime = eventDateTime.withZoneSameInstant(ZoneId.of("GMT"));
 
             if (eventDateTime.isBefore(ZonedDateTime.now())) {
                 event.getChannel().sendMessage("Cannot schedule an event in the past.").queue();
