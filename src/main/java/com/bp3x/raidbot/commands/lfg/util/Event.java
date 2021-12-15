@@ -14,6 +14,7 @@ import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.time.ZonedDateTime;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.Random;
 
@@ -23,6 +24,7 @@ import java.util.Random;
 public class Event {
     private static final Logger log = LoggerFactory.getLogger(Event.class);
 
+    // TODO: Refactor into Utils
     private static final HashMap<Message, Event> plannedEventsList = new HashMap<>();
 
     private final String shortName;
@@ -153,12 +155,11 @@ public class Event {
      */
     public static Event getEventById(String id) {
         for (int i = 0; i < plannedEventsList.size(); i++) {
-            Event[] eventsList = plannedEventsList.keySet().toArray(new Event[0]);
+            Event[] eventsList = plannedEventsList.values().toArray(new Event[0]);
             if (eventsList[i].getEventId().equals(id)) {
                 return eventsList[i];
             }
         }
-
         return null;
     }
 }
