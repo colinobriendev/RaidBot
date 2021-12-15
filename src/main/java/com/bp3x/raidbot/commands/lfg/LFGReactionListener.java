@@ -23,11 +23,6 @@ public class LFGReactionListener extends ListenerAdapter {
        handleReactionEvent(addEvent);
     }
 
-    @Override
-    public void onMessageReactionRemove(MessageReactionRemoveEvent removeEvent) {
-        handleReactionEvent(removeEvent);
-    }
-
     /**
      * Method to handle either a MessageReactionAddEvent or MessageReactionRemoveEvent to update the embed then remove the reaction.
      * @param reactionEvent the MessageReaction event needing to be handled
