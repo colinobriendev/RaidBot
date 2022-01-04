@@ -39,6 +39,7 @@ public class LFGReactionListener extends ListenerAdapter {
                     .thenCompose((e) -> reactionEvent.getReaction().removeReaction(reactionEvent.getUser()).submit());
         }
     }
+
     /**
      * Rebuilds the Embed based on the choice processed by handleReactionEvent
      * @param message - the message processed by the bot
