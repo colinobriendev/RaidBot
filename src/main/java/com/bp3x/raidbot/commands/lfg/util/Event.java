@@ -1,21 +1,28 @@
 package com.bp3x.raidbot.commands.lfg.util;
 
+import com.bp3x.raidbot.RaidBot;
 import com.bp3x.raidbot.commands.lfg.LFGConstants;
 import com.bp3x.raidbot.util.RaidBotJsonUtils;
 import com.bp3x.raidbot.util.RaidBotRuntimeException;
+import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
+import com.google.gson.stream.JsonWriter;
 import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.entities.Message;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import java.io.FileNotFoundException;
-import java.io.FileReader;
+
+import java.io.*;
 import java.time.ZonedDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Random;
+
+import static com.bp3x.raidbot.commands.lfg.LFGConstants.TIMESTAMP_PATTERN;
+import static com.bp3x.raidbot.util.RaidBotJsonUtils.*;
 
 /**
  * Represents an event that can be scheduled in the LFG command.
@@ -25,6 +32,7 @@ public class Event {
 
     private static final HashMap<Message, Event> plannedEventsList = new HashMap<>();
 
+    //// These fields are stored in JSON backup (planned_events.json) //////
     private final String shortName;
     private String longName;
     private int playerCount = 0;
@@ -46,6 +54,22 @@ public class Event {
         load(shortName);
 
         log.info("Created Event \"" + shortName + "\" scheduled for " + this.dateTime + " with event ID " + this.eventId);
+    }
+
+    /**
+     * Event Constructor for reading from JSON backup on startup.
+     */
+    public Event(String shortName, ZonedDateTime dateTime, String eventId,
+                 ArrayList<Member> acceptedPlayers, ArrayList<Member> declinedPlayers,
+                 ArrayList<Member> tentativePlayers) throws RaidBotRuntimeException {
+
+        this.shortName = shortName;
+        this.dateTime = dateTime;
+        this.eventId = eventId;
+        this.acceptedPlayers.addAll(acceptedPlayers);
+        this.tentativePlayers.addAll(tentativePlayers);
+        this.declinedPlayers.addAll(declinedPlayers);
+        load(shortName);
     }
 
     public static HashMap<Message, Event> getPlannedEventsList() { return plannedEventsList; }
@@ -159,5 +183,86 @@ public class Event {
             }
         }
         return null;
+    }
+    /**
+     * Method to write current event state to json.
+     * @throws RaidBotRuntimeException if the designated backup file does not exist or if there
+     * is a problem with writing to the file.
+     */
+    public static void allEventStateToJson() throws RaidBotRuntimeException {
+        try {
+            JsonWriter jsonWriter = new JsonWriter(new OutputStreamWriter(new FileOutputStream("planned_events.json")));
+            HashMap<Message, Event> eventMap = Event.getPlannedEventsList();
+            jsonWriter.name("planned_events").beginArray();
+
+            for (Message m : eventMap.keySet()) {
+                Event event = eventMap.get(m);
+                jsonWriter.name(m.getId()).beginObject();
+                jsonWriter.name("shortName").value(event.getShortName());
+                playerListsToJson(event, jsonWriter);
+                jsonWriter.name("eventId").value(event.getEventId());
+                jsonWriter.beginObject().name("dateTime");
+                jsonWriter.name("date").value(zonedDateTimeToJsonString(event));
+                jsonWriter.endObject();
+            }
+            jsonWriter.endArray();
+        } catch (IOException ioException) {
+            File f = new File("planned_events.json");
+            if (f.exists()) {
+                log.error("JSON backup file not found");
+                throw new RaidBotRuntimeException("There was a fatal error in file IO; JSON backup file is not writable.");
+            }
+            log.error("JSON backup file not writable");
+            throw new RaidBotRuntimeException("There was a fatal error in file IO; JSON backup file does not exist");
+        }
+    }
+
+    /**
+     * Method to read saved event data from JSON backup file on startup.
+     */
+    public void load() throws RaidBotRuntimeException {
+        log.info("Loading saved event data.");
+        try {
+            JsonElement fileElement = JsonParser.parseReader(new FileReader("planned_events.json"));
+            JsonObject eventFile = fileElement.getAsJsonObject();
+
+            for (String messageId : eventFile.keySet()) {
+                JsonObject eventObject = eventFile.getAsJsonObject(messageId);
+                // Create event object using event constructor --> build up array lists of players in helper functions
+                String eventId = eventObject.get("eventId").getAsString();
+                String shortName = eventObject.get("shortName").getAsString();
+                ZonedDateTime dateTime = jsonStringToDateTime(eventObject.get("dateTime").getAsString());
+                ArrayList<Member> acceptedPlayers = jsonArrayToMemberList(eventObject.getAsJsonArray("acceptedPlayers"));
+                ArrayList<Member> tentativePlayers = jsonArrayToMemberList(eventObject.getAsJsonArray("tentativePlayers"));
+                ArrayList<Member> declinedPlayers = jsonArrayToMemberList(eventObject.getAsJsonArray("declinedPlayers"));
+
+            }
+
+
+        } catch (RuntimeException rte) {
+            throw new RaidBotRuntimeException("There was an error parsing the planned_event.json file. Shutting down the bot.");
+
+        } catch (FileNotFoundException e) {
+            throw new RaidBotRuntimeException("Unable to find planned event json file. Shutting down the bot.");
+        }
+    }
+
+    /**
+     *  Method to retrieve a ZonedDateTime object from planned_events.json
+     */
+    private ZonedDateTime jsonStringToDateTime(String dateTime) {
+        DateTimeFormatter raidBotTimeFormatter = DateTimeFormatter.ofPattern(TIMESTAMP_PATTERN);
+        return ZonedDateTime.parse(dateTime, raidBotTimeFormatter);
+    }
+
+    /**
+     * Method to retrieve an ArrayList of members from planned_events.json
+     */
+    private ArrayList<Member> jsonArrayToMemberList(JsonArray jsonArray) {
+        ArrayList<Member> memberList = new ArrayList<>();
+        for (JsonElement memberElement : jsonArray) {
+            //memberList.add(RaidBot.getJDA().getGuildById().getMemberById();
+        }
+        return memberList;
     }
 }
