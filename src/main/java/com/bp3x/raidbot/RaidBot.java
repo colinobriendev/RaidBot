@@ -6,7 +6,6 @@ import com.bp3x.raidbot.commands.lfg.RemindCommand;
 import com.bp3x.raidbot.commands.lfg.util.Event;
 import com.bp3x.raidbot.util.Config;
 import com.bp3x.raidbot.util.RaidBotGuildUtils;
-import com.bp3x.raidbot.util.RaidBotJsonUtils;
 import com.bp3x.raidbot.util.RaidBotRuntimeException;
 import com.jagrosh.jdautilities.command.CommandClientBuilder;
 import com.jagrosh.jdautilities.commons.waiter.EventWaiter;
@@ -18,9 +17,9 @@ import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.Role;
 import net.dv8tion.jda.api.events.ReadyEvent;
 import net.dv8tion.jda.api.hooks.ListenerAdapter;
-import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import javax.annotation.Nonnull;
 import javax.security.auth.login.LoginException;
 import java.util.ArrayList;
 import java.util.Set;
@@ -96,7 +95,7 @@ public class RaidBot extends ListenerAdapter {
     }
 
     @Override
-    public void onReady(@NotNull ReadyEvent event) {
+    public void onReady(@Nonnull ReadyEvent event) {
         /*
          * Ensure timezone roles exist or are created as needed
          * This cannot be done on config load, as it occurs before JDA init,
