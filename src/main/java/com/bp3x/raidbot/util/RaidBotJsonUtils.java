@@ -1,5 +1,6 @@
 package com.bp3x.raidbot.util;
 
+import com.bp3x.raidbot.commands.lfg.LFGConstants;
 import com.bp3x.raidbot.commands.lfg.util.Event;
 import com.google.gson.Gson;
 import com.google.gson.JsonArray;
@@ -83,7 +84,7 @@ public class RaidBotJsonUtils {
             }
             jsonWriter.endArray();
         } catch (IOException ioException) {
-            File f = new File("planned_events.json");
+            File f = new File(LFGConstants.PLANNED_EVENTS_JSON);
             if (f.exists()) {
                 log.error("JSON backup file not found");
                 throw new RaidBotRuntimeException("There was a fatal error in file IO; JSON backup file is not writable.");

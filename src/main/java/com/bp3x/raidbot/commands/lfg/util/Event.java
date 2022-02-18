@@ -1,6 +1,5 @@
 package com.bp3x.raidbot.commands.lfg.util;
 
-import com.bp3x.raidbot.RaidBot;
 import com.bp3x.raidbot.commands.lfg.LFGConstants;
 import com.bp3x.raidbot.util.RaidBotJsonUtils;
 import com.bp3x.raidbot.util.RaidBotRuntimeException;
@@ -9,17 +8,20 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.google.gson.stream.JsonWriter;
+import com.jagrosh.jdautilities.command.CommandEvent;
 import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.entities.Message;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.*;
+import java.time.Duration;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Random;
+import java.util.*;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 
 import static com.bp3x.raidbot.commands.lfg.LFGConstants.TIMESTAMP_PATTERN;
 import static com.bp3x.raidbot.util.RaidBotJsonUtils.*;
@@ -32,7 +34,10 @@ public class Event {
 
     private static final HashMap<Message, Event> plannedEventsList = new HashMap<>();
 
-    //// These fields are stored in JSON backup (planned_events.json) //////
+    // executor service for scheduling event deletion in background
+    private static final ScheduledExecutorService eventExecutorService = Executors.newScheduledThreadPool(5);
+
+    //// These fields are stored in JSON backup //////
     private final String shortName;
     private String longName;
     private int playerCount = 0;
@@ -108,7 +113,7 @@ public class Event {
      */
     public void load(String shortName) throws RaidBotRuntimeException {
         try {
-            JsonElement element = JsonParser.parseReader(new FileReader("event.json"));
+            JsonElement element = JsonParser.parseReader(new FileReader(LFGConstants.EVENT_JSON));
             JsonObject eventConfig = element.getAsJsonObject();
             // need an additional object to hold the specific event and its values
             JsonObject eventAsJSON = eventConfig.getAsJsonObject(shortName);
@@ -161,7 +166,7 @@ public class Event {
      */
     public static boolean eventExists(String shortName) throws RaidBotRuntimeException {
         try {
-            JsonElement element = JsonParser.parseReader(new FileReader("event.json"));
+            JsonElement element = JsonParser.parseReader(new FileReader(LFGConstants.EVENT_JSON));
             JsonObject eventConfig = element.getAsJsonObject();
 
             return eventConfig.has(shortName);
@@ -191,7 +196,7 @@ public class Event {
      */
     public static void allEventStateToJson() throws RaidBotRuntimeException {
         try {
-            JsonWriter jsonWriter = new JsonWriter(new OutputStreamWriter(new FileOutputStream("planned_events.json")));
+            JsonWriter jsonWriter = new JsonWriter(new OutputStreamWriter(new FileOutputStream(LFGConstants.PLANNED_EVENTS_JSON)));
             HashMap<Message, Event> eventMap = Event.getPlannedEventsList();
             jsonWriter.name("planned_events").beginArray();
 
@@ -207,7 +212,7 @@ public class Event {
             }
             jsonWriter.endArray();
         } catch (IOException ioException) {
-            File f = new File("planned_events.json");
+            File f = new File(LFGConstants.PLANNED_EVENTS_JSON);
             if (f.exists()) {
                 log.error("JSON backup file not found");
                 throw new RaidBotRuntimeException("There was a fatal error in file IO; JSON backup file is not writable.");
@@ -223,21 +228,19 @@ public class Event {
     public void load() throws RaidBotRuntimeException {
         log.info("Loading saved event data.");
         try {
-            JsonElement fileElement = JsonParser.parseReader(new FileReader("planned_events.json"));
+            JsonElement fileElement = JsonParser.parseReader(new FileReader(LFGConstants.PLANNED_EVENTS_JSON));
             JsonObject eventFile = fileElement.getAsJsonObject();
 
             for (String messageId : eventFile.keySet()) {
                 JsonObject eventObject = eventFile.getAsJsonObject(messageId);
                 // Create event object using event constructor --> build up array lists of players in helper functions
-                String eventId = eventObject.get("eventId").getAsString();
-                String shortName = eventObject.get("shortName").getAsString();
-                ZonedDateTime dateTime = jsonStringToDateTime(eventObject.get("dateTime").getAsString());
-                ArrayList<Member> acceptedPlayers = jsonArrayToMemberList(eventObject.getAsJsonArray("acceptedPlayers"));
-                ArrayList<Member> tentativePlayers = jsonArrayToMemberList(eventObject.getAsJsonArray("tentativePlayers"));
-                ArrayList<Member> declinedPlayers = jsonArrayToMemberList(eventObject.getAsJsonArray("declinedPlayers"));
-
+                String loadedEventId = eventObject.get("eventId").getAsString();
+                String loadedShortName = eventObject.get("shortName").getAsString();
+                ZonedDateTime loadedDateTime = jsonStringToDateTime(eventObject.get("dateTime").getAsString());
+                ArrayList<Member> loadedAcceptedPlayers = jsonArrayToMemberList(eventObject.getAsJsonArray("acceptedPlayers"));
+                ArrayList<Member> loadedTentativePlayers = jsonArrayToMemberList(eventObject.getAsJsonArray("tentativePlayers"));
+                ArrayList<Member> loadedDeclinedPlayers = jsonArrayToMemberList(eventObject.getAsJsonArray("declinedPlayers"));
             }
-
 
         } catch (RuntimeException rte) {
             throw new RaidBotRuntimeException("There was an error parsing the planned_event.json file. Shutting down the bot.");
@@ -264,5 +267,80 @@ public class Event {
             //memberList.add(RaidBot.getJDA().getGuildById().getMemberById();
         }
         return memberList;
+    }
+
+    /**
+     * Calculate the minutes between our planned event and now so the runnable knows when to execute
+     * @param eventTime
+     * @return
+     */
+    private static long calculateMinutesBetween(ZonedDateTime eventTime) {
+        ZonedDateTime now = ZonedDateTime.now();
+        return Duration.between(now, eventTime).toMinutes();
+    }
+
+    /**
+     * Schedule the event to be deleted from the plannedEventsList and LFGConstants.PLANNED_EVENTS_JSON using a runnable
+     * @param eventTime
+     */
+    public static void scheduleEventDeletion(ZonedDateTime eventTime, CommandEvent commandEvent, Message embedMessage)
+    {
+        // schedule a message that will turn into removing the event after a time
+        Event event = plannedEventsList.get(embedMessage);
+        long minutesBetween = calculateMinutesBetween(eventTime);
+        Runnable taskTest = () -> handleEventDeletionAndNotifyPlayers(commandEvent, embedMessage);
+        eventExecutorService.schedule(taskTest, minutesBetween, TimeUnit.MINUTES);
+
+        if (log.isDebugEnabled())
+        {
+            log.debug("There are " + minutesBetween + " minutes between event time and now");
+        }
+    }
+
+    /**
+     * Handle the deletion of the event from plannedEventsList and from the planned_events.json
+     * @param commandEvent - the command event
+     * @param embedMessage - the message from the bot for the event
+     */
+    public static void handleEventDeletionAndNotifyPlayers(CommandEvent commandEvent, Message embedMessage)
+    {
+        Event event = plannedEventsList.get(embedMessage);
+        ArrayList<Member> accepted = event.getAcceptedPlayers();
+        ArrayList<Member> tentative = event.getTentativePlayers();
+        StringBuilder builder = appendPlayerNames(event);
+        commandEvent.getChannel().sendMessage(builder.toString()).queue();
+
+        // we should delete the event from plannedEventsList and the json now
+        plannedEventsList.remove(embedMessage);
+        // remove from json file here
+    }
+
+    /**
+     * Append a list of accepted players to notify them when the event begins. Will also notify tentative if we have less than max count on accepted.
+     * @param event
+     * @return
+     */
+    public static StringBuilder appendPlayerNames(Event event) {
+        ArrayList<Member> acceptedPlayers = event.getAcceptedPlayers();
+        ArrayList<Member> tentativePlayers = event.getTentativePlayers();
+        int eventPlayerCount = event.getPlayerCount();
+        StringBuilder message = new StringBuilder();
+        if (!acceptedPlayers.isEmpty()) {
+            message.append("Pinging accepted members: ");
+            for (Member member : acceptedPlayers) {
+                message.append(member.getAsMention() + " ");
+            }
+            if (!tentativePlayers.isEmpty() && acceptedPlayers.size() < eventPlayerCount) {
+                message.append("\nPinging tentative members because we don't have enough accepted: ");
+                for (Member member : tentativePlayers) {
+                    message.append(member.getAsMention() + " ");
+                }
+            }
+            message.append("\n" + event.getLongName() + " is starting now!");
+        }
+        else {
+            message.append(event.getLongName() + " is starting but has no participants :(");
+        }
+        return message;
     }
 }

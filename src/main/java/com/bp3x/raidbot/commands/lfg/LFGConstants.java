@@ -10,6 +10,11 @@ public class LFGConstants {
 
     private LFGConstants(){}
 
+    /* file names */
+    public static final String PLANNED_EVENTS_JSON = "planned_events.json";
+    public static final String CONFIG_JSON = "config.json";
+    public static final String EVENT_JSON = "event.json";
+
     /* emoji constants for reactions on LFG embed */
     public static final String ACCEPTED_EMOJI = "✅";
     public static final String TENTATIVE_EMOJI = "❓";
