@@ -6,12 +6,14 @@ import com.google.gson.Gson;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
+import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.entities.Message;
 import com.google.gson.stream.JsonWriter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import java.io.*;
+import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
@@ -67,25 +69,14 @@ public class RaidBotJsonUtils {
         return toReturn;
     }
 
-    public static void playerListsToJson(Event event, JsonWriter jsonWriter) throws RaidBotRuntimeException {
+    public static void writeEventToJson(Event event, Message m, JsonWriter writer) throws RaidBotRuntimeException {
         try {
-            jsonWriter.beginArray().name("acceptedPlayers");
-            for (Member m : event.getAcceptedPlayers()) {
-                jsonWriter.name("userId").value(m.getId());
-            }
-            jsonWriter.endArray();
-
-            jsonWriter.beginArray().name("tentativePlayers");
-            for (Member m : event.getTentativePlayers()) {
-                jsonWriter.name("userId").value(m.getId());
-            }
-            jsonWriter.endArray();
-
-            jsonWriter.beginArray().name("declinedPlayers");
-            for (Member m : event.getDeclinedPlayers()) {
-                jsonWriter.name("userId").value(m.getId());
-            }
-            jsonWriter.endArray();
+            writer.name(m.getId()).beginObject();
+            writer.name("shortName").value(event.getShortName());
+            writeEventPlayerListsToJson(event, writer);
+            writer.name("eventId").value(event.getEventId());
+            writer.name("time").value(zonedDateTimeToJsonString(event));
+            writer.endObject();
         } catch (IOException ioException) {
             File f = new File("planned_events.json");
             if (f.exists()) {
@@ -97,6 +88,53 @@ public class RaidBotJsonUtils {
         }
     }
 
+    /**
+     * Write a given event's player lists (accepted, tentative, declined) to JSON backup
+     *
+     * @param event The event whose player lists to write to JSON
+     * @param jsonWriter The JsonWriter to write to
+     * @throws RaidBotRuntimeException
+     */
+    public static void writeEventPlayerListsToJson(Event event, JsonWriter jsonWriter) {
+        try {
+            writePlayerListToJson(event.getAcceptedPlayers(), "acceptedPlayers", jsonWriter);
+            writePlayerListToJson(event.getTentativePlayers(), "tentativePlayers", jsonWriter);
+            writePlayerListToJson(event.getDeclinedPlayers(), "declinedPlayers", jsonWriter);
+        } catch (RaidBotRuntimeException e) {
+            log.error("Error while writing to JSON backup! Backup likely did not complete successfully.");
+            e.printStackTrace();
+        }
+    }
+
+    /**
+     * Write all players in a list (accepted, declined, or tentative) to the JSON backup
+     *
+     * @param players List of players to write to JSON
+     * @param keyName JSON key string that corresponds to the list
+     * @param writer JSON writer to write to
+     */
+    public static void writePlayerListToJson(ArrayList<Member> players, String keyName, JsonWriter writer) throws RaidBotRuntimeException {
+        try {
+            writer.name(keyName).beginArray();
+            for (Member m : players) {
+                writer.value(m.getId());
+            }
+            writer.endArray();
+        } catch (IOException ioException) {
+            File f = new File("planned_events.json");
+            if (!f.exists()) {
+                log.error("JSON backup file not found");
+                throw new RaidBotRuntimeException("There was a fatal error in file IO; JSON backup file is not writable.");
+            } else {
+                log.error("JSON backup file not writable");
+                throw new RaidBotRuntimeException("There was a fatal error in file IO; JSON backup file does not exist");
+            }
+        }
+    }
+
+    /**
+     * Method to retrieve an event's timestamp as a formatted string
+     */
     public static String zonedDateTimeToJsonString(Event raidBotEvent) {
        return DateTimeFormatter.ofPattern(TIMESTAMP_PATTERN).format(raidBotEvent.getTime());
     }
@@ -105,7 +143,7 @@ public class RaidBotJsonUtils {
      *  Method to retrieve a ZonedDateTime object from planned_events.json
      */
     public static ZonedDateTime jsonStringToDateTime(String dateTime) {
-        DateTimeFormatter raidBotTimeFormatter = DateTimeFormatter.ofPattern(TIMESTAMP_PATTERN);
+        DateTimeFormatter raidBotTimeFormatter = DateTimeFormatter.ofPattern(TIMESTAMP_PATTERN).withZone(ZoneId.of("GMT"));
         return ZonedDateTime.parse(dateTime, raidBotTimeFormatter);
     }
 
@@ -114,9 +152,21 @@ public class RaidBotJsonUtils {
      */
     public static ArrayList<Member> jsonArrayToMemberList(JsonArray jsonArray) {
         ArrayList<Member> memberList = new ArrayList<>();
-        for (JsonElement memberElement : jsonArray) {
-            //memberList.add(RaidBot.getJDA().getGuildById().getMemberById();
+
+        String guildId = RaidBot.getConfig().getGuildId();
+        Guild guild = RaidBot.getJDA().getGuildById(guildId);
+
+        if (guild != null) {
+            for (JsonElement memberElement : jsonArray) {
+                long memberId = memberElement.getAsLong();
+
+                Member member = guild.retrieveMemberById(memberId).complete();
+                if (member != null) {
+                    memberList.add(member);
+                }
+            }
         }
+
         return memberList;
     }
 }

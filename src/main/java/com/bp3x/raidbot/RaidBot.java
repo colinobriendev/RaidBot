@@ -16,7 +16,9 @@ import net.dv8tion.jda.api.entities.Activity;
 import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.Role;
 import net.dv8tion.jda.api.events.ReadyEvent;
+import net.dv8tion.jda.api.events.ShutdownEvent;
 import net.dv8tion.jda.api.hooks.ListenerAdapter;
+import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import javax.annotation.Nonnull;
@@ -112,6 +114,15 @@ public class RaidBot extends ListenerAdapter {
 
         try {
             Event.loadEventsFromJson();
+        } catch (RaidBotRuntimeException e) {
+            e.printStackTrace();
+        }
+    }
+
+    @Override
+    public void onShutdown(@NotNull ShutdownEvent event) {
+        try {
+            Event.saveEventsToJson();
         } catch (RaidBotRuntimeException e) {
             e.printStackTrace();
         }

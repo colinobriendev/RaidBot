@@ -2,6 +2,7 @@ package com.bp3x.raidbot.commands.lfg;
 
 import com.bp3x.raidbot.commands.lfg.util.Event;
 import com.bp3x.raidbot.commands.lfg.util.LFGEmbedBuilder;
+import com.bp3x.raidbot.util.RaidBotRuntimeException;
 import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.entities.Message;
 import net.dv8tion.jda.api.events.message.react.GenericMessageReactionEvent;
@@ -37,6 +38,13 @@ public class LFGReactionListener extends ListenerAdapter {
             reactionEvent.getChannel().retrieveMessageById(reactionEvent.getMessageId()).submit()
                     .thenCompose((m) -> rebuildEmbed(m, reactionEmoji, reactionEvent.getMember()).submit())
                     .thenCompose((e) -> reactionEvent.getReaction().removeReaction(reactionEvent.getUser()).submit());
+        }
+
+        try {
+            Event.saveEventsToJson();
+        } catch (RaidBotRuntimeException e) {
+            log.error("Could not save events to JSON backup!");
+            e.printStackTrace();
         }
     }
 
