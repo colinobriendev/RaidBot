@@ -110,10 +110,5 @@ public class RaidBot extends ListenerAdapter {
             timezoneRoles.add(newRole);
         }
         config.setTimezoneRoles(timezoneRoles);
-        try {
-            Event.allEventStateToJson();
-        } catch (RaidBotRuntimeException e) {
-            e.printStackTrace();
-        }
     }
 }
