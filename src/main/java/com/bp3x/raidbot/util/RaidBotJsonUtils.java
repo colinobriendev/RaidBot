@@ -1,16 +1,15 @@
-package com.bp3x.raidbot.util;
 
+package com.bp3x.raidbot.util;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
 public class RaidBotJsonUtils {
-
     private static final Logger log = LoggerFactory.getLogger(RaidBotJsonUtils.class);
 
     /* Utility class */
-    private RaidBotJsonUtils() { }
+    private RaidBotJsonUtils() {
+    }
 
     /**
      * Method to parse json config files
@@ -22,7 +21,6 @@ public class RaidBotJsonUtils {
     public static String getValueFromJSON(String key, JsonObject jsonObject) throws RaidBotRuntimeException {
         String toReturn;
         toReturn = jsonObject.get(key).getAsString();
-
         if (toReturn.isEmpty()) {
             throw new RaidBotRuntimeException("There was an issue parsing the JSON file provided with key " + key);
         } else {
@@ -52,4 +50,3 @@ public class RaidBotJsonUtils {
         return toReturn;
     }
 }
-
