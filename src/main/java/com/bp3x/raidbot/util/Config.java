@@ -1,6 +1,7 @@
 package com.bp3x.raidbot.util;
 
 import com.bp3x.raidbot.RaidBot;
+import com.bp3x.raidbot.commands.lfg.LFGConstants;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
@@ -68,7 +69,7 @@ public class Config {
         log.info("Loading Bot configuration.");
 
         try {
-            JsonElement element = JsonParser.parseReader(new FileReader("config.json"));
+            JsonElement element = JsonParser.parseReader(new FileReader(LFGConstants.CONFIG_JSON));
             JsonObject configFile = element.getAsJsonObject();
 
             this.token = RaidBotJsonUtils.getValueFromJSON(TOKEN_KEY, configFile);

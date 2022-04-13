@@ -33,24 +33,24 @@ public class LFGCommand extends Command {
     }
 
     @Override
-    protected void execute(CommandEvent event) {
-        log.info("LFG command by: " + event.getAuthor().getName() + "#" + event.getAuthor().getDiscriminator());
-        log.info("Wants to schedule " + event.getArgs());
+    protected void execute(CommandEvent commandEvent) {
+        log.info("LFG command by: " + commandEvent.getAuthor().getName() + "#" + commandEvent.getAuthor().getDiscriminator());
+        log.info("Wants to schedule " + commandEvent.getArgs());
 
         // get and verify the user's timezone role for conversion
         ArrayList<Role> timezoneRoles = RaidBot.getConfig().getTimezoneRoles();
-        Role userTimezoneRole = event.getMember().getRoles().stream().filter(timezoneRoles::contains).findFirst().orElse(null);
+        Role userTimezoneRole = commandEvent.getMember().getRoles().stream().filter(timezoneRoles::contains).findFirst().orElse(null);
         if (userTimezoneRole == null) {
-            event.getChannel().sendMessage("You do not have a timezone role assigned. Ask an admin to give you your role.").queue();
+            commandEvent.getChannel().sendMessage("You do not have a timezone role assigned. Ask an admin to give you your role.").queue();
             return;
         }
 
-        String[] args = event.getArgs().split("\\s+");
+        String[] args = commandEvent.getArgs().split("\\s+");
         if (args.length < 3) {
-            event.getChannel().sendMessage("Missing activity and/or date+time argument(s)").queue();
+            commandEvent.getChannel().sendMessage("Missing activity and/or date+time argument(s)").queue();
             return;
         } else if (args.length > 3) {
-            event.getChannel().sendMessage("Too many arguments. Should be in the format of: " + this.arguments).queue();
+            commandEvent.getChannel().sendMessage("Too many arguments. Should be in the format of: " + this.arguments).queue();
             return;
         }
 
@@ -74,21 +74,21 @@ public class LFGCommand extends Command {
             eventDateTime = eventDateTime.withZoneSameInstant(ZoneId.of("GMT"));
 
             if (eventDateTime.isBefore(ZonedDateTime.now())) {
-                event.getChannel().sendMessage("Cannot schedule an event in the past.").queue();
+                commandEvent.getChannel().sendMessage("Cannot schedule an event in the past.").queue();
                 return;
             }
         } catch (DateTimeParseException e) {
-            event.getChannel().sendMessage("Invalid date/time argument.").queue();
+            commandEvent.getChannel().sendMessage("Invalid date/time argument.").queue();
             return;
         }
 
         try {
             if (Event.eventExists(activityString)) {
                 Event plannedEvent = new Event(activityString, eventDateTime);
-                plannedEvent.setPlayerStatus(event.getMember(), Event.EventPlayerStatus.ACCEPTED);
+                plannedEvent.setPlayerStatus(commandEvent.getMember(), Event.EventPlayerStatus.ACCEPTED);
                 LFGEmbedBuilder builder = new LFGEmbedBuilder(plannedEvent);
 
-                Message success = event.getChannel().sendMessage(builder.build()).complete();
+                Message success = commandEvent.getChannel().sendMessage(builder.build()).complete();
 
                 RestAction<Void> reactWhiteCheckMark = success.addReaction(LFGConstants.ACCEPTED_EMOJI);
                 RestAction<Void> reactQuestion = success.addReaction(LFGConstants.TENTATIVE_EMOJI);
@@ -97,11 +97,14 @@ public class LFGCommand extends Command {
                 RestAction.allOf(reactWhiteCheckMark, reactQuestion, reactCross).queue();
 
                 plannedEvent.registerEvent(success);
+
+                Event.scheduleEventDeletion(eventDateTime, commandEvent, success);
+
             } else {
-                event.getChannel().sendMessage("That event does not exist").queue();
+                commandEvent.getChannel().sendMessage("That event does not exist").queue();
             }
         } catch (RaidBotRuntimeException e) {
-            event.getChannel().sendMessage("Error occurred while creating event.").queue();
+            commandEvent.getChannel().sendMessage("Error occurred while creating event.").queue();
         }
     }
     

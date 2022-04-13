@@ -22,12 +22,11 @@ import static com.bp3x.raidbot.commands.lfg.LFGConstants.TIMESTAMP_PATTERN;
 
 
 public class RaidBotJsonUtils {
-
     private static final Logger log = LoggerFactory.getLogger(RaidBotJsonUtils.class);
-    private static final Gson gson = new Gson();
 
     /* Utility class */
-    private RaidBotJsonUtils() { }
+    private RaidBotJsonUtils() {
+    }
 
     /**
      * Method to parse json config files
@@ -39,7 +38,6 @@ public class RaidBotJsonUtils {
     public static String getValueFromJSON(String key, JsonObject jsonObject) throws RaidBotRuntimeException {
         String toReturn;
         toReturn = jsonObject.get(key).getAsString();
-
         if (toReturn.isEmpty()) {
             throw new RaidBotRuntimeException("There was an issue parsing the JSON file provided with key " + key);
         } else {
@@ -68,7 +66,7 @@ public class RaidBotJsonUtils {
         }
         return toReturn;
     }
-
+  
     public static void writeEventToJson(Event event, Message m, JsonWriter writer) throws RaidBotRuntimeException {
         try {
             writer.name(m.getId()).beginObject();
