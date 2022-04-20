@@ -1,17 +1,18 @@
 package com.bp3x.raidbot.commands.lfg.util;
+import com.bp3x.raidbot.RaidBot;
 import com.bp3x.raidbot.commands.lfg.LFGConstants;
 import com.bp3x.raidbot.util.RaidBotJsonUtils;
 import com.bp3x.raidbot.util.RaidBotRuntimeException;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
+import com.google.gson.stream.JsonWriter;
 import com.jagrosh.jdautilities.command.CommandEvent;
 import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.entities.Message;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import java.io.FileNotFoundException;
-import java.io.FileReader;
+import java.io.*;
 import java.time.Duration;
 import java.time.ZonedDateTime;
 import java.util.ArrayList;
@@ -47,6 +48,22 @@ public class Event {
                 rand.nextInt(10);
         load(shortName);
         log.info("Created Event \"" + shortName + "\" scheduled for " + this.dateTime + " with event ID " + this.eventId);
+    }
+    
+    /**
+     * Event Constructor for reading from JSON backup on startup.
+     */
+    public Event(String shortName, ZonedDateTime dateTime, String eventId,
+                 ArrayList<Member> acceptedPlayers, ArrayList<Member> declinedPlayers,
+                 ArrayList<Member> tentativePlayers) throws RaidBotRuntimeException {
+        
+        this.shortName = shortName;
+        this.dateTime = dateTime;
+        this.eventId = eventId;
+        this.acceptedPlayers.addAll(acceptedPlayers);
+        this.tentativePlayers.addAll(tentativePlayers);
+        this.declinedPlayers.addAll(declinedPlayers);
+        load(shortName);
     }
 
     public static HashMap<Message, Event> getPlannedEventsList() {
@@ -118,6 +135,13 @@ public class Event {
      */
     public void registerEvent(Message message) {
         plannedEventsList.put(message, this);
+
+        try {
+            Event.saveEventsToJson();
+        } catch (RaidBotRuntimeException e) {
+            log.warn("Error occurred while saving events to JSON. Events may not be backed up properly.");
+            e.printStackTrace();
+        }
     }
 
     /**
@@ -175,9 +199,33 @@ public class Event {
     }
     /**
      * Calculate the minutes between our planned event and now so the runnable knows when to execute
-     * @param eventTime
-     * @return
      */
+    public static void saveEventsToJson() throws RaidBotRuntimeException {
+        try {
+            FileOutputStream fos = new FileOutputStream("planned_events.json");
+            JsonWriter jsonWriter = new JsonWriter(new OutputStreamWriter(fos));
+            jsonWriter.setIndent("\t");
+
+            HashMap<Message, Event> eventMap = Event.getPlannedEventsList();
+
+            jsonWriter.beginObject();
+            for (Message message : eventMap.keySet()) {
+                RaidBotJsonUtils.writeEventToJson(eventMap.get(message), message, jsonWriter);
+            }
+            jsonWriter.endObject();
+            jsonWriter.close();
+        } catch (IOException ioException) {
+            File f = new File("planned_events.json");
+            if (!f.exists()) {
+                log.error("JSON backup file not found");
+                throw new RaidBotRuntimeException("There was a fatal error in file IO; Planned events JSON backup file doesn't exist");
+            } else {
+                log.error("JSON backup file not writable");
+                throw new RaidBotRuntimeException("There was a fatal error in file IO; Planned events JSON backup file does not exist");
+            }
+        }
+    }
+    
     private static long calculateMinutesBetween(ZonedDateTime eventTime) {
         ZonedDateTime now = ZonedDateTime.now();
         return Duration.between(now, eventTime).toMinutes();
@@ -185,8 +233,52 @@ public class Event {
 
     /**
      * Schedule the event to be deleted from the plannedEventsList and LFGConstants.PLANNED_EVENTS_JSON using a runnable
-     * @param eventTime
      */
+    public static void loadEventsFromJson() throws RaidBotRuntimeException {
+        log.info("Loading saved event data.");
+        try {
+            JsonObject eventsBackupJson = JsonParser.parseReader(new FileReader("planned_events.json")).getAsJsonObject();
+
+            // early exit if there isn't a backup file or the json is invalid
+            if (eventsBackupJson == null || eventsBackupJson.size() == 0) {
+                log.info("No event backup found.");
+                return;
+            }
+
+            log.info("Found " + eventsBackupJson.size() + " events in JSON backup file.");
+            for (String messageId : eventsBackupJson.keySet()) {
+                JsonObject eventObject = eventsBackupJson.getAsJsonObject(messageId);
+
+                // Create event object using event constructor --> build up array lists of players in helper functions
+                String eventId = eventObject.get("eventId").getAsString();
+                String shortName = eventObject.get("shortName").getAsString();
+                ZonedDateTime dateTime = RaidBotJsonUtils.jsonStringToDateTime(eventObject.get("time").getAsString());
+                ArrayList<Member> acceptedPlayers = RaidBotJsonUtils.jsonArrayToMemberList(eventObject.get("acceptedPlayers").getAsJsonArray());
+                ArrayList<Member> tentativePlayers = RaidBotJsonUtils.jsonArrayToMemberList(eventObject.get("tentativePlayers").getAsJsonArray());
+                ArrayList<Member> declinedPlayers = RaidBotJsonUtils.jsonArrayToMemberList(eventObject.get("declinedPlayers").getAsJsonArray());
+
+                Event newEvent = new Event(shortName, dateTime, eventId, acceptedPlayers, tentativePlayers, declinedPlayers);
+
+                var guild = RaidBot.getJDA().getGuildById(RaidBot.getConfig().getGuildId());
+                if (guild != null) {
+                    var lfgChannel = guild.getTextChannelById(RaidBot.getConfig().getLfgChannelId());
+
+                    if (lfgChannel != null) {
+                        lfgChannel.retrieveMessageById(messageId).queue(message -> {
+                            plannedEventsList.put(message, newEvent);
+                            log.info("Successfully loaded event: " + newEvent.getShortName() + " " + RaidBotJsonUtils.zonedDateTimeToJsonString(newEvent));
+                        });
+                    }
+                }
+            }
+        } catch (RuntimeException rte) {
+            throw new RaidBotRuntimeException("There was an error parsing the planned_event.json file. Shutting down the bot.");
+
+        } catch (FileNotFoundException e) {
+            log.warn("Unable to find planned event json file. Proceeding without loading from backup.");
+        }
+    }
+    
     public static void scheduleEventDeletion(ZonedDateTime eventTime, CommandEvent commandEvent, Message embedMessage)
     {
         // schedule a message that will turn into removing the event after a time

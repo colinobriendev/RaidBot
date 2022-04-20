@@ -1,5 +1,6 @@
 package com.bp3x.raidbot.util;
 
+import com.bp3x.raidbot.RaidBot;
 import com.bp3x.raidbot.commands.lfg.LFGConstants;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
@@ -20,8 +21,10 @@ public class Config {
     private final Logger log = LoggerFactory.getLogger(Config.class);
     private String token = null;
     private String ownerID = null;
-    private String prefix = null;
     private String[] coOwnerIDs;
+    private String guildId;
+    private String lfgChannelId = null;
+    private String prefix = null;
     private final HashMap<String, String> timezones = new HashMap<>();
     private ArrayList<Role> timezoneRoles = new ArrayList<>();
 
@@ -29,6 +32,8 @@ public class Config {
     private static final String TOKEN_KEY = "token";
     private static final String OWNER_KEY = "owner_id";
     private static final String CO_OWNER_KEY = "coowner_ids";
+    private static final String GUILD_ID_KEY = "guild_id";
+    private static final String LFG_CHANNEL_ID = "lfg_channel_id";
     private static final String PREFIX_KEY = "prefix";
     private static final String TIMEZONES_KEY = "timezones";
     private static final String TIMEZONES_ID_KEY = "id";
@@ -45,6 +50,10 @@ public class Config {
     public String[] getCoOwnerIDs() {
         return coOwnerIDs;
     }
+
+    public String getGuildId() { return guildId; }
+
+    public String getLfgChannelId() { return lfgChannelId; }
 
     public String getPrefix() {
         return prefix;
@@ -66,6 +75,8 @@ public class Config {
             this.token = RaidBotJsonUtils.getValueFromJSON(TOKEN_KEY, configFile);
             this.ownerID = RaidBotJsonUtils.getValueFromJSON(OWNER_KEY, configFile);
             this.coOwnerIDs = RaidBotJsonUtils.getArrayValueFromJSON(CO_OWNER_KEY, configFile, 2);
+            this.guildId = RaidBotJsonUtils.getValueFromJSON(GUILD_ID_KEY, configFile);
+            this.lfgChannelId = RaidBotJsonUtils.getValueFromJSON(LFG_CHANNEL_ID, configFile);
             this.prefix = RaidBotJsonUtils.getValueFromJSON(PREFIX_KEY, configFile);
 
             // parse timezones as a hashmap

@@ -55,7 +55,8 @@ public class LFGCommand extends Command {
         }
 
         String activityString = args[0];
-        String dateTimeString = args[1] + " " + args[2].toUpperCase();
+
+        String dateTimeString = formatDateTimeInput(args[1], args[2]);
 
         ZonedDateTime eventDateTime = null;
         try {
@@ -105,5 +106,44 @@ public class LFGCommand extends Command {
         } catch (RaidBotRuntimeException e) {
             commandEvent.getChannel().sendMessage("Error occurred while creating event.").queue();
         }
+    }
+    
+    /**
+     * Add leading zeros to date and time when needed
+     */
+    String formatDateTimeInput(String date, String time) {
+        String result;
+        
+        StringBuilder dateStringBuilder = new StringBuilder();
+        String[] dateSplit = date.split("/");
+        for (int i = 0; i < dateSplit.length - 1; i++) {
+            String d = dateSplit[i];
+            if (Integer.parseInt(d) < 10 && !d.contains("0")) {
+                dateStringBuilder.append("0").append(d);
+            } else {
+                dateStringBuilder.append(d);
+            }
+            dateStringBuilder.append("/");
+        }
+        
+        if (Integer.parseInt(dateSplit[2]) < 2000) {
+            dateStringBuilder.append("20");
+        }
+        dateStringBuilder.append(dateSplit[2]);
+
+        StringBuilder timeStringBuilder = new StringBuilder();
+        String[] timeSplit = time.split(":");
+        String hour = timeSplit[0];
+        if (Integer.parseInt(hour) < 10 && !hour.contains("0")) {
+            timeStringBuilder.append("0")
+                    .append(hour)
+                    .append(":")
+                    .append(timeSplit[1]);
+        } else {
+            timeStringBuilder = new StringBuilder(time);
+        }
+
+        result = (dateStringBuilder + " " + timeStringBuilder).toUpperCase();
+        return result;
     }
 }

@@ -24,7 +24,7 @@ public class LFGConstants {
     protected static final List<String> EMOJI_LIST = Arrays.asList(ACCEPTED_EMOJI, TENTATIVE_EMOJI, DECLINED_EMOJI);
 
     /* timestamp pattern for LFG event */
-    public static final String TIMESTAMP_PATTERN = "MM/dd/yy hh:mma";
+    public static final String TIMESTAMP_PATTERN = "MM/dd/yyyy hh:mma";
 
     /* constant strings to retrieve json file entries for events */
     public static final String LONG_NAME_KEY = "long_name";
