@@ -1,17 +1,18 @@
 package com.bp3x.raidbot.commands.lfg.util;
+import com.bp3x.raidbot.RaidBot;
 import com.bp3x.raidbot.commands.lfg.LFGConstants;
 import com.bp3x.raidbot.util.RaidBotJsonUtils;
 import com.bp3x.raidbot.util.RaidBotRuntimeException;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
+import com.google.gson.stream.JsonWriter;
 import com.jagrosh.jdautilities.command.CommandEvent;
 import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.entities.Message;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import java.io.FileNotFoundException;
-import java.io.FileReader;
+import java.io.*;
 import java.time.Duration;
 import java.time.ZonedDateTime;
 import java.util.ArrayList;
@@ -47,6 +48,22 @@ public class Event {
                 rand.nextInt(10);
         load(shortName);
         log.info("Created Event \"" + shortName + "\" scheduled for " + this.dateTime + " with event ID " + this.eventId);
+    }
+    
+    /**
+     * Event Constructor for reading from JSON backup on startup.
+     */
+    public Event(String shortName, ZonedDateTime dateTime, String eventId,
+                 ArrayList<Member> acceptedPlayers, ArrayList<Member> declinedPlayers,
+                 ArrayList<Member> tentativePlayers) throws RaidBotRuntimeException {
+        
+        this.shortName = shortName;
+        this.dateTime = dateTime;
+        this.eventId = eventId;
+        this.acceptedPlayers.addAll(acceptedPlayers);
+        this.tentativePlayers.addAll(tentativePlayers);
+        this.declinedPlayers.addAll(declinedPlayers);
+        load(shortName);
     }
 
     public static HashMap<Message, Event> getPlannedEventsList() {
@@ -182,8 +199,6 @@ public class Event {
     }
     /**
      * Calculate the minutes between our planned event and now so the runnable knows when to execute
-     * @param eventTime
-     * @return
      */
     public static void saveEventsToJson() throws RaidBotRuntimeException {
         try {
@@ -218,7 +233,6 @@ public class Event {
 
     /**
      * Schedule the event to be deleted from the plannedEventsList and LFGConstants.PLANNED_EVENTS_JSON using a runnable
-     * @param eventTime
      */
     public static void loadEventsFromJson() throws RaidBotRuntimeException {
         log.info("Loading saved event data.");

@@ -125,6 +125,10 @@ public class LFGCommand extends Command {
             }
             dateStringBuilder.append("/");
         }
+        
+        if (Integer.parseInt(dateSplit[2]) < 2000) {
+            dateStringBuilder.append("20");
+        }
         dateStringBuilder.append(dateSplit[2]);
 
         StringBuilder timeStringBuilder = new StringBuilder();
