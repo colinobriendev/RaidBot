@@ -55,7 +55,7 @@ public class RaidBot extends ListenerAdapter {
         }
     }
 
-    public static void main(String[] args) throws LoginException {
+    public static void main(String[] args) throws LoginException, RaidBotRuntimeException {
         log.info("Preparing to start RaidBot");
 
         final String LOADING = "Loading...";

@@ -29,26 +29,26 @@ public class RemindCommand extends Command {
         log.info("Reminding for " + event.getArgs());
 
         String[] args = event.getArgs().split("\\s+");
-        if (args.length == 2 && (args[1].equalsIgnoreCase("accepted") || args[1].equalsIgnoreCase("tentative"))) {
-            // Retrieve event ID data and then add the names of the users in the accepted list
-            Event remindEvent = Event.getEventById(args[0]);
-            StringBuilder reminderStringBuilder = new StringBuilder();
+        if (args.length == 2) {
+            if (args[1].equalsIgnoreCase("accepted") || args[1].equalsIgnoreCase("tentative")) {
+                // Retrieve event ID data and then add the names of the users in the accepted list
+                Event remindEvent = Event.getEventById(args[0]);
+                StringBuilder reminderStringBuilder = new StringBuilder();
 
-            if (remindEvent != null) {
-                buildReminderString(remindEvent, event, reminderStringBuilder);
-                log.info("getActiveParticipants = " + remindEvent.getActiveParticipants());
-                if (remindEvent.getActiveParticipants()) {
-                    event.getChannel().sendMessage("Players reminded:\n" + reminderStringBuilder).queue();
-                }
-                else {
-                    event.getChannel().sendMessage("There are no players to remind.").queue();
+                if (remindEvent != null) {
+                    buildReminderString(remindEvent, event, reminderStringBuilder);
+                    log.info("hasActiveParticipants = " + remindEvent.hasActiveParticipants());
+                    if (remindEvent.hasActiveParticipants()) {
+                        event.getChannel().sendMessage("Players reminded:\n" + reminderStringBuilder).queue();
+                    } else {
+                        event.getChannel().sendMessage("There are no players to remind.").queue();
+                    }
+                } else {
+                    event.getChannel().sendMessage("That event does not exist.").queue();
                 }
             } else {
-                event.getChannel().sendMessage("That event does not exist.").queue();
+                event.getChannel().sendMessage("Missing or invalid parameters. Usage: `!remind <event id> accepted` or `!remind <event id> tentative`").queue();
             }
-        }
-        else {
-            event.getChannel().sendMessage("Usage: `!remind <event id> accepted` or `!remind <event id> tentative`").queue();
         }
     }
 
@@ -57,18 +57,12 @@ public class RemindCommand extends Command {
 
         if (args[1].equalsIgnoreCase("accepted")) {
             for (Member player : remindEvent.getAcceptedPlayers()) {
-                sb.append("<@!");
-                sb.append(player.getUser().getId());
-                sb.append(">\n");
-                sb.append(LFGConstants.ACCEPTED_EMOJI);
+                sb.append(player.getAsMention() + LFGConstants.ACCEPTED_EMOJI);
                 sb.append("\n");
             }
         } else if (args[1].equalsIgnoreCase("tentative")) {
             for (Member player : remindEvent.getTentativePlayers()) {
-                sb.append("<@!");
-                sb.append(player.getUser().getId());
-                sb.append(">");
-                sb.append(LFGConstants.TENTATIVE_EMOJI);
+                sb.append(player.getAsMention() + LFGConstants.TENTATIVE_EMOJI);
                 sb.append("\n");
             }
         } else {

@@ -114,10 +114,9 @@ public class Event {
      * Return true if accepted or tentative participants exist on the event, false otherwise
      * @return - boolean
      */
-    public boolean getActiveParticipants() {
+    public boolean hasActiveParticipants() {
         log.info("Accepted player size = " + getAcceptedPlayers().size() + " and tentative size = " + getTentativePlayers().size());
-        if (getAcceptedPlayers().size() > 0 || getTentativePlayers().size() > 0) return true;
-        else return false;
+        return !getAcceptedPlayers().isEmpty() || !getTentativePlayers().isEmpty();
     }
 
     /**
@@ -343,18 +342,18 @@ public class Event {
         if (!acceptedPlayers.isEmpty()) {
             message.append("Pinging accepted members: ");
             for (Member member : acceptedPlayers) {
-                message.append(member.getAsMention() + " ");
+                message.append(member.getAsMention()).append(" ");
             }
             if (!tentativePlayers.isEmpty() && acceptedPlayers.size() < eventPlayerCount) {
                 message.append("\nPinging tentative members because we don't have enough accepted: ");
                 for (Member member : tentativePlayers) {
-                    message.append(member.getAsMention() + " ");
+                    message.append(member.getAsMention()).append(" ");
                 }
             }
-            message.append("\n" + event.getLongName() + " is starting now!");
+            message.append("\n").append(event.getLongName()).append(" is starting now!");
         }
         else {
-            message.append(event.getLongName() + " is starting but has no participants " + CRYING_FACE_EMOJI);
+            message.append(event.getLongName()).append(" is starting but has no participants ").append(CRYING_FACE_EMOJI);
         }
         return message;
     }
