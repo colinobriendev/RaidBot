@@ -7,12 +7,12 @@ import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.entities.Message;
 import net.dv8tion.jda.api.events.message.react.GenericMessageReactionEvent;
 import net.dv8tion.jda.api.events.message.react.MessageReactionAddEvent;
-import net.dv8tion.jda.api.events.message.react.MessageReactionRemoveEvent;
 import net.dv8tion.jda.api.hooks.ListenerAdapter;
 import net.dv8tion.jda.api.requests.RestAction;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.annotation.Nonnull;
 import java.util.HashMap;
 
 public class LFGReactionListener extends ListenerAdapter {
@@ -20,7 +20,7 @@ public class LFGReactionListener extends ListenerAdapter {
     Logger log = LoggerFactory.getLogger(LFGReactionListener.class);
 
     @Override
-    public void onMessageReactionAdd(MessageReactionAddEvent addEvent) {
+    public void onMessageReactionAdd(@Nonnull MessageReactionAddEvent addEvent) {
        handleReactionEvent(addEvent);
     }
 
@@ -36,8 +36,8 @@ public class LFGReactionListener extends ListenerAdapter {
 
         else {
             reactionEvent.getChannel().retrieveMessageById(reactionEvent.getMessageId()).submit()
-                    .thenCompose((m) -> rebuildEmbed(m, reactionEmoji, reactionEvent.getMember()).submit())
-                    .thenCompose((e) -> reactionEvent.getReaction().removeReaction(reactionEvent.getUser()).submit());
+                    .thenCompose(m -> rebuildEmbed(m, reactionEmoji, reactionEvent.getMember()).submit())
+                    .thenCompose(e -> reactionEvent.getReaction().removeReaction(reactionEvent.getUser()).submit());
         }
 
         try {
@@ -79,6 +79,8 @@ public class LFGReactionListener extends ListenerAdapter {
             case LFGConstants.DECLINED_EMOJI:
                 event.setPlayerStatus(member, Event.EventPlayerStatus.DECLINED);
                 break;
+            default:
+                log.error("We uh shouldn't reach this, but, adding a default because its a good practice");
         }
     }
 }

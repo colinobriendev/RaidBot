@@ -50,6 +50,7 @@ public class LFGEmbedBuilder extends RaidBotEmbedBuilder {
      */
     private String constructPlayersList(ArrayList<Member> playerList) {
         if (playerList.isEmpty()) {
+            if (log.isDebugEnabled()) log.debug("Player list is empty");
             return (LFGConstants.BLANK_PLAYER_LIST);
         }
 
