@@ -6,7 +6,6 @@
 
 # Config files
 config.json
-event.json
 planned_events.json
 
 #IDEA files

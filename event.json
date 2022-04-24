@@ -1,0 +1,68 @@
+{
+"ce": {
+"long_name": "Crota's End",
+"type": "pve",
+"player_count": 6,
+"exact_player_count": true
+},
+"dsc": {
+"long_name": "Deep Stone Crypt",
+"type": "pve",
+"player_count": 6,
+"exact_player_count": true
+},
+"gos": {
+"long_name": "Garden of Salvation",
+"type": "pve",
+"player_count": 6,
+"exact_player_count": true
+},
+"kf": {
+"long_name": "King's Fall",
+"type": "pve",
+"player_count": 6,
+"exact_player_count": true
+},
+"lw": {
+"long_name": "Last Wish",
+"type": "pve",
+"player_count": 6,
+"exact_player_count": true
+},
+"vog": {
+"long_name": "Vault of Glass",
+"type": "pve",
+"player_count": 6,
+"exact_player_count": true
+},
+"votd": {
+  "long_name": "Vow of the Disciple",
+  "type": "pve",
+  "player_count": 6,
+  "exact_player_count": true
+},
+"wotm": {
+"long_name": "Wrath of the Machine",
+"type": "pve",
+"player_count": 6,
+"exact_player_count": true
+},
+"comp": {
+"long_name": "Competitive PVP",
+"type": "pvp",
+"player_count": 3,
+"exact_player_count": true
+},
+"ib": {
+"long_name": "Iron Banner",
+"type": "pvp",
+"player_count": 6,
+"exact_player_count": true
+},
+"trials": {
+"long_name": "Trials of Osiris",
+"type": "pvp",
+"player_count": 3,
+"exact_player_count": true
+}
+}
