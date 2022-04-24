@@ -109,6 +109,16 @@ public class Event {
     }
 
     /**
+     * Return true if accepted or tentative participants exist on the event, false otherwise
+     * @return - boolean
+     */
+    public boolean getActiveParticipants() {
+        log.info("Accepted player size = " + getAcceptedPlayers().size() + " and tentative size = " + getTentativePlayers().size());
+        if (getAcceptedPlayers().size() > 0 || getTentativePlayers().size() > 0) return true;
+        else return false;
+    }
+
+    /**
      * Load event information from event config json.
      *
      * @param shortName - event shortname to load from.
