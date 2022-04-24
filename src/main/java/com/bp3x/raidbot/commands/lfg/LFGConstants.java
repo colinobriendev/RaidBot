@@ -37,4 +37,19 @@ public class LFGConstants {
     public static final String DECLINED_PLAYERS = "Declined Players:";
     public static final String TENTATIVE_PLAYERS = "Tentative Players:";
     public static final String BLANK_PLAYER_LIST = "[N/A]";
+
+    public static final String LFG_HELP_START = "Example:\n`!lfg dsc 1/1/2022 9:00pm`\n";
+
+    public static final String LFG_HELP_SHORT_NAMES = "\nShort names for events: \n" +
+            "`ce:` Crota's End\n" +
+            "`dsc:` Deep Stone Crypt\n" +
+            "`gos:` Garden of Salvation\n" +
+            "`kf:` King's Fall\n" +
+            "`lw:` Last Wish\n" +
+            "`vog:` Vault of Glass\n" +
+            "`votd:` Vow of the Disciple\n" +
+            "`wotm:` Wrath of the Machine\n" +
+            "`comp:` Competitive PVP\n" +
+            "`ib:` Iron Banner\n" +
+            "`trials:` Trials of Osiris\n";
 }

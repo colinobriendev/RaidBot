@@ -25,11 +25,10 @@ public class LFGCommand extends Command {
 
     public LFGCommand() {
         this.name = "lfg";
-        this.help = "Use to schedule a event";
+        this.help = buildHelpMessage().toString();
         this.arguments = "<shortName> <date: MM/dd/yy> <time: hh:mma>";
         this.guildOnly = false;
         this.ownerCommand = false;
-        this.category = new Category("General");
     }
 
     @Override
@@ -145,5 +144,15 @@ public class LFGCommand extends Command {
 
         result = (dateStringBuilder + " " + timeStringBuilder).toUpperCase();
         return result;
+    }
+
+    /**
+     * Construct StringBuilder for use when !help is called
+     * @return - Help message for LFGCommand
+     */
+    private StringBuilder buildHelpMessage() {
+        StringBuilder helpMessage = new StringBuilder();
+        helpMessage.append("\n" + LFGConstants.LFG_HELP_START + LFGConstants.LFG_HELP_SHORT_NAMES);
+        return helpMessage;
     }
 }
