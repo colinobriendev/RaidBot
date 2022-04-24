@@ -39,6 +39,8 @@ public class Event {
     private final String eventId;
     private final ZonedDateTime dateTime;
 
+    private static final String CRYING_FACE_EMOJI =  "\uD83D\uDE2D";
+
     public Event(String shortName, ZonedDateTime dateTime) throws RaidBotRuntimeException {
         this.shortName = shortName;
         this.dateTime = dateTime;
@@ -201,9 +203,11 @@ public class Event {
      * Calculate the minutes between our planned event and now so the runnable knows when to execute
      */
     public static void saveEventsToJson() throws RaidBotRuntimeException {
-        try {
-            FileOutputStream fos = new FileOutputStream("planned_events.json");
-            JsonWriter jsonWriter = new JsonWriter(new OutputStreamWriter(fos));
+
+
+        try (FileOutputStream fos = new FileOutputStream(LFGConstants.PLANNED_EVENTS_JSON);
+             JsonWriter jsonWriter = new JsonWriter(new OutputStreamWriter(fos))) {
+
             jsonWriter.setIndent("\t");
 
             HashMap<Message, Event> eventMap = Event.getPlannedEventsList();
@@ -213,9 +217,9 @@ public class Event {
                 RaidBotJsonUtils.writeEventToJson(eventMap.get(message), message, jsonWriter);
             }
             jsonWriter.endObject();
-            jsonWriter.close();
+
         } catch (IOException ioException) {
-            File f = new File("planned_events.json");
+            File f = new File(LFGConstants.PLANNED_EVENTS_JSON);
             if (!f.exists()) {
                 log.error("JSON backup file not found");
                 throw new RaidBotRuntimeException("There was a fatal error in file IO; Planned events JSON backup file doesn't exist");
@@ -237,7 +241,7 @@ public class Event {
     public static void loadEventsFromJson() throws RaidBotRuntimeException {
         log.info("Loading saved event data.");
         try {
-            JsonObject eventsBackupJson = JsonParser.parseReader(new FileReader("planned_events.json")).getAsJsonObject();
+            JsonObject eventsBackupJson = JsonParser.parseReader(new FileReader(LFGConstants.PLANNED_EVENTS_JSON)).getAsJsonObject();
 
             // early exit if there isn't a backup file or the json is invalid
             if (eventsBackupJson == null || eventsBackupJson.size() == 0) {
@@ -282,9 +286,15 @@ public class Event {
     public static void scheduleEventDeletion(ZonedDateTime eventTime, CommandEvent commandEvent, Message embedMessage)
     {
         // schedule a message that will turn into removing the event after a time
-        Event event = plannedEventsList.get(embedMessage);
         long minutesBetween = calculateMinutesBetween(eventTime);
-        Runnable taskTest = () -> handleEventDeletionAndNotifyPlayers(commandEvent, embedMessage);
+        Runnable taskTest = () -> {
+            try {
+                handleEventDeletionAndNotifyPlayers(commandEvent, embedMessage);
+            } catch (RaidBotRuntimeException e) {
+                throw new RuntimeException(e);
+            }
+        };
+
         eventExecutorService.schedule(taskTest, minutesBetween, TimeUnit.MINUTES);
 
         if (log.isDebugEnabled())
@@ -298,23 +308,22 @@ public class Event {
      * @param commandEvent - the command event
      * @param embedMessage - the message from the bot for the event
      */
-    public static void handleEventDeletionAndNotifyPlayers(CommandEvent commandEvent, Message embedMessage)
-    {
+    public static void handleEventDeletionAndNotifyPlayers(CommandEvent commandEvent, Message embedMessage) throws RaidBotRuntimeException {
         Event event = plannedEventsList.get(embedMessage);
-        ArrayList<Member> accepted = event.getAcceptedPlayers();
-        ArrayList<Member> tentative = event.getTentativePlayers();
         StringBuilder builder = appendPlayerNames(event);
         commandEvent.getChannel().sendMessage(builder.toString()).queue();
 
         // we should delete the event from plannedEventsList and the json now
         plannedEventsList.remove(embedMessage);
         // remove from json file here
+        saveEventsToJson();
+
     }
 
     /**
      * Append a list of accepted players to notify them when the event begins. Will also notify tentative if we have less than max count on accepted.
-     * @param event
-     * @return
+     * @param event - the RaidBot Event
+     * @return StringBuilder - names of players that have accepted or are tentative for the event
      */
     public static StringBuilder appendPlayerNames(Event event) {
         ArrayList<Member> acceptedPlayers = event.getAcceptedPlayers();
@@ -335,7 +344,7 @@ public class Event {
             message.append("\n" + event.getLongName() + " is starting now!");
         }
         else {
-            message.append(event.getLongName() + " is starting but has no participants :(");
+            message.append(event.getLongName() + " is starting but has no participants " + CRYING_FACE_EMOJI);
         }
         return message;
     }

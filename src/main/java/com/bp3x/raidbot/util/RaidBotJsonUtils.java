@@ -2,7 +2,6 @@ package com.bp3x.raidbot.util;
 
 import com.bp3x.raidbot.RaidBot;
 import com.bp3x.raidbot.commands.lfg.util.Event;
-import com.google.gson.Gson;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
@@ -17,7 +16,7 @@ import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
-import java.util.HashMap;
+
 import static com.bp3x.raidbot.commands.lfg.LFGConstants.TIMESTAMP_PATTERN;
 
 
@@ -31,7 +30,7 @@ public class RaidBotJsonUtils {
     /**
      * Method to parse json config files
      *
-     * @param key        - key value from json object being processed
+     * @param key - key value from json object being processed
      * @param jsonObject - json object
      * @return - string value
      */
@@ -91,7 +90,6 @@ public class RaidBotJsonUtils {
      *
      * @param event The event whose player lists to write to JSON
      * @param jsonWriter The JsonWriter to write to
-     * @throws RaidBotRuntimeException
      */
     public static void writeEventPlayerListsToJson(Event event, JsonWriter jsonWriter) {
         try {

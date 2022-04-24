@@ -1,6 +1,5 @@
 package com.bp3x.raidbot.util;
 
-import com.bp3x.raidbot.RaidBot;
 import com.bp3x.raidbot.commands.lfg.LFGConstants;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
