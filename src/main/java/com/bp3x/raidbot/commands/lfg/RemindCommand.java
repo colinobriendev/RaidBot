@@ -33,13 +33,10 @@ public class RemindCommand extends Command {
             if (args[1].equalsIgnoreCase("accepted") || args[1].equalsIgnoreCase("tentative")) {
                 // Retrieve event ID data and then add the names of the users in the accepted list
                 Event remindEvent = Event.getEventById(args[0]);
-                StringBuilder reminderStringBuilder = new StringBuilder();
-
                 if (remindEvent != null) {
-                    buildReminderString(remindEvent, event, reminderStringBuilder);
                     log.info("hasActiveParticipants = " + remindEvent.hasActiveParticipants());
                     if (remindEvent.hasActiveParticipants()) {
-                        event.getChannel().sendMessage("Players reminded:\n" + reminderStringBuilder).queue();
+                        event.getChannel().sendMessage("Players reminded:\n" + buildReminderString(remindEvent, event)).queue();
                     } else {
                         event.getChannel().sendMessage("There are no players to remind.").queue();
                     }
@@ -52,22 +49,23 @@ public class RemindCommand extends Command {
         }
     }
 
-    private void buildReminderString(Event remindEvent, CommandEvent event, StringBuilder sb) {
+    private String buildReminderString(Event remindEvent, CommandEvent event) {
         String[] args = event.getArgs().split("\\s+");
+        StringBuilder sb = new StringBuilder();
 
         if (args[1].equalsIgnoreCase("accepted")) {
             for (Member player : remindEvent.getAcceptedPlayers()) {
-                sb.append(player.getAsMention() + LFGConstants.ACCEPTED_EMOJI);
+                sb.append(player.getAsMention()).append(LFGConstants.ACCEPTED_EMOJI);
                 sb.append("\n");
             }
         } else if (args[1].equalsIgnoreCase("tentative")) {
             for (Member player : remindEvent.getTentativePlayers()) {
-                sb.append(player.getAsMention() + LFGConstants.TENTATIVE_EMOJI);
+                sb.append(player.getAsMention()).append(LFGConstants.TENTATIVE_EMOJI);
                 sb.append("\n");
             }
         } else {
             event.getChannel().sendMessage("Usage: !remind " + remindEvent.getEventId() + " accepted or tentative").queue();
         }
-
+    return sb.toString();
     }
 }
