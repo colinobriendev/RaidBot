@@ -16,6 +16,10 @@ planned_events.json
 .idea/discord.xml
 .idea/remote-targets.xml
 .idea/uiDesigner.xml
+.idea/runConfigurations.xml
+
+# build output
+target/
 
 # Mobile Tools for Java (J2ME)
 .mtj.tmp/
