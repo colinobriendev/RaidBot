@@ -1,68 +1,100 @@
 {
-"ce": {
-"long_name": "Crota's End",
-"type": "pve",
-"player_count": 6,
-"exact_player_count": true
-},
-"dsc": {
-"long_name": "Deep Stone Crypt",
-"type": "pve",
-"player_count": 6,
-"exact_player_count": true
-},
-"gos": {
-"long_name": "Garden of Salvation",
-"type": "pve",
-"player_count": 6,
-"exact_player_count": true
-},
-"kf": {
-"long_name": "King's Fall",
-"type": "pve",
-"player_count": 6,
-"exact_player_count": true
-},
-"lw": {
-"long_name": "Last Wish",
-"type": "pve",
-"player_count": 6,
-"exact_player_count": true
-},
-"vog": {
-"long_name": "Vault of Glass",
-"type": "pve",
-"player_count": 6,
-"exact_player_count": true
-},
-"votd": {
-  "long_name": "Vow of the Disciple",
-  "type": "pve",
-  "player_count": 6,
-  "exact_player_count": true
-},
-"wotm": {
-"long_name": "Wrath of the Machine",
-"type": "pve",
-"player_count": 6,
-"exact_player_count": true
-},
-"comp": {
-"long_name": "Competitive PVP",
-"type": "pvp",
-"player_count": 3,
-"exact_player_count": true
-},
-"ib": {
-"long_name": "Iron Banner",
-"type": "pvp",
-"player_count": 6,
-"exact_player_count": true
-},
-"trials": {
-"long_name": "Trials of Osiris",
-"type": "pvp",
-"player_count": 3,
-"exact_player_count": true
-}
+  "ce": {
+    "long_name": "Crota's End",
+    "player_count": 6,
+    "exact_player_count": true
+  },
+  "dsc": {
+    "long_name": "Deep Stone Crypt",
+    "player_count": 6,
+    "exact_player_count": true
+  },
+  "gos": {
+    "long_name": "Garden of Salvation",
+    "player_count": 6,
+    "exact_player_count": true
+  },
+  "kf": {
+    "long_name": "King's Fall",
+    "player_count": 6,
+    "exact_player_count": true
+  },
+  "lw": {
+    "long_name": "Last Wish",
+    "player_count": 6,
+    "exact_player_count": true
+  },
+  "vog": {
+    "long_name": "Vault of Glass",
+    "player_count": 6,
+    "exact_player_count": true
+  },
+  "votd": {
+    "long_name": "Vow of the Disciple",
+    "player_count": 6,
+    "exact_player_count": true
+  },
+  "wotm": {
+    "long_name": "Wrath of the Machine",
+    "player_count": 6,
+    "exact_player_count": true
+  },
+  "goa": {
+    "long_name": "Grasp of Avarice",
+    "player_count": 3,
+    "exact_player_count": true
+  },
+  "poh": {
+    "long_name": "Pit of Heresy",
+    "player_count": 3,
+    "exact_player_count": true
+  },
+  "st": {
+    "long_name": "Shattered Throne",
+    "player_count": 3,
+    "exact_player_count": true
+  },
+  "proph": {
+    "long_name": "Prophecy",
+    "player_count": 3,
+    "exact_player_count": true
+  },
+  "vang": {
+    "long_name": "Vanguard Ops",
+    "player_count": 3
+  },
+  "cruc": {
+    "long_name": "Quickplay Crucible",
+    "player_count": 6
+  },
+  "gamb": {
+    "long_name": "Gambit",
+    "player_count": 4
+  },
+  "gms": {
+    "long_name": "Grandmaster Nightfalls",
+    "player_count":3,
+    "exact_player_count": true
+  },
+  "comp": {
+    "long_name": "Competitive PVP",
+    "player_count": 3
+  },
+  "ib": {
+    "long_name": "Iron Banner",
+    "player_count":6
+  },
+  "trials": {
+    "long_name": "Trials of Osiris",
+    "player_count": 3
+  },
+  "camp": {
+    "long_name": "Campaign",
+    "player_count": 3,
+    "exact_player_count": true
+  },
+  "fp": {
+    "long_name": "Free Play",
+    "player_count": 6
+  }
 }
