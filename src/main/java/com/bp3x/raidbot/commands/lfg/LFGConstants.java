@@ -37,4 +37,6 @@ public class LFGConstants {
     public static final String DECLINED_PLAYERS = "Declined Players:";
     public static final String TENTATIVE_PLAYERS = "Tentative Players:";
     public static final String BLANK_PLAYER_LIST = "[N/A]";
+
+    public static final String LFG_HELP_START = "Example:\n`!lfg dsc 1/1/2022 9:00pm`\n";
 }

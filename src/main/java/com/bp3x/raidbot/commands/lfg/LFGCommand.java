@@ -3,6 +3,8 @@ package com.bp3x.raidbot.commands.lfg;
 import com.bp3x.raidbot.RaidBot;
 import com.bp3x.raidbot.commands.lfg.util.*;
 import com.bp3x.raidbot.util.RaidBotRuntimeException;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
 import com.jagrosh.jdautilities.command.Command;
 import com.jagrosh.jdautilities.command.CommandEvent;
 import net.dv8tion.jda.api.entities.Message;
@@ -10,6 +12,9 @@ import net.dv8tion.jda.api.entities.Role;
 import net.dv8tion.jda.api.requests.RestAction;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.io.FileNotFoundException;
+import java.io.FileReader;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
@@ -23,13 +28,12 @@ import java.util.HashMap;
 public class LFGCommand extends Command {
     private final Logger log = LoggerFactory.getLogger(LFGCommand.class);
 
-    public LFGCommand() {
+    public LFGCommand() throws RaidBotRuntimeException {
         this.name = "lfg";
-        this.help = "Use to schedule a event";
+        this.help = buildHelpMessage();
         this.arguments = "<shortName> <date: MM/dd/yy> <time: hh:mma>";
         this.guildOnly = false;
         this.ownerCommand = false;
-        this.category = new Category("General");
     }
 
     @Override
@@ -107,13 +111,13 @@ public class LFGCommand extends Command {
             commandEvent.getChannel().sendMessage("Error occurred while creating event.").queue();
         }
     }
-    
+
     /**
      * Add leading zeros to date and time when needed
      */
     String formatDateTimeInput(String date, String time) {
         String result;
-        
+
         StringBuilder dateStringBuilder = new StringBuilder();
         String[] dateSplit = date.split("/");
         for (int i = 0; i < dateSplit.length - 1; i++) {
@@ -125,7 +129,7 @@ public class LFGCommand extends Command {
             }
             dateStringBuilder.append("/");
         }
-        
+
         if (Integer.parseInt(dateSplit[2]) < 2000) {
             dateStringBuilder.append("20");
         }
@@ -145,5 +149,39 @@ public class LFGCommand extends Command {
 
         result = (dateStringBuilder + " " + timeStringBuilder).toUpperCase();
         return result;
+    }
+
+    /**
+     * Construct String for when !help is called. Uses event.json to build out the message.
+     *
+     * @return - Help message for LFGCommand
+     */
+    private String buildHelpMessage() throws RaidBotRuntimeException {
+        StringBuilder helpMessage = new StringBuilder();
+        final String CODE = "`"; // back quote for formatting in discord
+        helpMessage.append("\n" + LFGConstants.LFG_HELP_START);
+        JsonObject eventJson = getEventsJson();
+        // for each short name in event.json, create a line for the help message to explain short name and what it represents
+        for (String shortName: eventJson.keySet()) {
+            JsonObject eventObject = eventJson.getAsJsonObject(shortName);
+            helpMessage.append(CODE).append(shortName).append(":").append(CODE).append(" ").append(eventObject.get(LFGConstants.LONG_NAME_KEY)).append("\n");
+        }
+        return helpMessage.toString();
+    }
+
+    /**
+     * Retrieve event.json for use with building out help messages
+     * @return JsonObject for event.json file
+     * @throws RaidBotRuntimeException
+     */
+    private JsonObject getEventsJson() throws RaidBotRuntimeException {
+
+        JsonObject eventsJson = null;
+        try {
+            eventsJson = JsonParser.parseReader(new FileReader(LFGConstants.EVENT_JSON)).getAsJsonObject();
+        } catch (FileNotFoundException e) {
+            throw new RaidBotRuntimeException("Caught file not found exception, shutting down bot");
+        }
+        return eventsJson;
     }
 }
