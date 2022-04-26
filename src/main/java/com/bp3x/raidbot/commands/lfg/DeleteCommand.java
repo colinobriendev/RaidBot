@@ -48,7 +48,6 @@ public class DeleteCommand extends Command {
 
             if (messageToDelete != null)
             {
-                commandEvent.getChannel().sendMessage("Deleting event with ID " + eventToDelete.getEventId()).queue();
                 commandEvent.getChannel().deleteMessageById(messageToDelete.getId()).queue();
                 eventsList.remove(messageToDelete);
                 try {
@@ -56,6 +55,7 @@ public class DeleteCommand extends Command {
                 } catch (RaidBotRuntimeException e) {
                     log.error("Could not save events to JSON backup!", e);
                 }
+                commandEvent.getChannel().sendMessage("Deleted event with ID " + eventToDelete.getEventId()).queue();
             }
             else {
                 commandEvent.getChannel().sendMessage("Unable to find message ID that matches input, please recheck and try again.").queue();
