@@ -1,5 +1,6 @@
 package com.bp3x.raidbot;
 
+import com.bp3x.raidbot.commands.lfg.DeleteCommand;
 import com.bp3x.raidbot.commands.lfg.LFGCommand;
 import com.bp3x.raidbot.commands.lfg.LFGReactionListener;
 import com.bp3x.raidbot.commands.lfg.RemindCommand;
@@ -76,7 +77,8 @@ public class RaidBot extends ListenerAdapter {
         //add commands
         client.addCommands(
                 new LFGCommand(),
-                new RemindCommand()
+                new RemindCommand(),
+                new DeleteCommand()
         );
 
         // add client and waiter
