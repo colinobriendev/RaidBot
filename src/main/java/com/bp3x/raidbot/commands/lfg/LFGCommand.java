@@ -2,6 +2,7 @@ package com.bp3x.raidbot.commands.lfg;
 
 import com.bp3x.raidbot.RaidBot;
 import com.bp3x.raidbot.commands.lfg.util.*;
+import com.bp3x.raidbot.util.MessageUtils;
 import com.bp3x.raidbot.util.RaidBotRuntimeException;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
@@ -62,7 +63,7 @@ public class LFGCommand extends Command {
 
         String dateTimeString = formatDateTimeInput(args[1], args[2]);
 
-        ZonedDateTime eventDateTime = null;
+        ZonedDateTime eventDateTime;
         try {
             // look up the full name for the zone id (ex: "PST" -> "America/Los_Angeles"
             // this ensures daylight savings is factored in
@@ -103,6 +104,8 @@ public class LFGCommand extends Command {
                 plannedEvent.registerEvent(success);
 
                 Event.scheduleEventDeletion(eventDateTime, commandEvent, success);
+
+                MessageUtils.deleteMessage(commandEvent.getMessage());
 
             } else {
                 commandEvent.getChannel().sendMessage("That event does not exist").queue();
@@ -155,6 +158,7 @@ public class LFGCommand extends Command {
      * Construct String for when !help is called. Uses event.json to build out the message.
      *
      * @return - Help message for LFGCommand
+     * @throws RaidBotRuntimeException - throw this to shut down the bot
      */
     private String buildHelpMessage() throws RaidBotRuntimeException {
         StringBuilder helpMessage = new StringBuilder();
@@ -172,11 +176,11 @@ public class LFGCommand extends Command {
     /**
      * Retrieve event.json for use with building out help messages
      * @return JsonObject for event.json file
-     * @throws RaidBotRuntimeException
+     * @throws RaidBotRuntimeException - throw this to shut down the bot
      */
     private JsonObject getEventsJson() throws RaidBotRuntimeException {
 
-        JsonObject eventsJson = null;
+        JsonObject eventsJson;
         try {
             eventsJson = JsonParser.parseReader(new FileReader(LFGConstants.EVENT_JSON)).getAsJsonObject();
         } catch (FileNotFoundException e) {

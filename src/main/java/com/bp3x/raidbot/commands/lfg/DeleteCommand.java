@@ -1,15 +1,15 @@
 package com.bp3x.raidbot.commands.lfg;
 
 import com.bp3x.raidbot.commands.lfg.util.Event;
+import com.bp3x.raidbot.util.MessageUtils;
 import com.bp3x.raidbot.util.RaidBotRuntimeException;
 import com.jagrosh.jdautilities.command.Command;
 import com.jagrosh.jdautilities.command.CommandEvent;
+import net.dv8tion.jda.api.MessageBuilder;
 import net.dv8tion.jda.api.entities.Message;
+import net.dv8tion.jda.api.exceptions.ErrorResponseException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import java.util.HashMap;
-import java.util.Map;
 
 /**
  * Enable deleting of an LFG embed with event id.
@@ -33,36 +33,30 @@ public class DeleteCommand extends Command {
     protected void execute(CommandEvent commandEvent) {
 
         String[] args = commandEvent.getArgs().split("\\s+");
+        Event eventToDelete = null;
 
         if (args.length == 1) {
-            Event eventToDelete = Event.getEventById(args[0]);
-            HashMap<Message, Event> eventsList = Event.getPlannedEventsList();
-            Message messageToDelete = null;
+            eventToDelete = Event.getEventById(args[0]);
+            if (eventToDelete == null) {
+                commandEvent.getChannel().sendMessage("Unable to find event message to delete with provided ID, please recheck and try again.").queue();
+            }
+            Message messageToDelete = Event.findMessageFromEvent(eventToDelete);
 
-            // work backwards to find key from value
-            for (Map.Entry<Message, Event> entry : eventsList.entrySet()) {
-                if (entry.getValue().equals(eventToDelete)) {
-                    messageToDelete = entry.getKey();
-                }
+            try {
+                Event.removeEvent(messageToDelete);
+            } catch (ErrorResponseException ere) {
+                log.error("Error response exception thrown when deleting message", ere);
+                commandEvent.getChannel().sendMessage("The message that you tried to delete may have already been deleted, contact an admin").queue();
+            } catch (RaidBotRuntimeException e) {
+                log.error("Could not save events to JSON backup!", e);
             }
 
-            if (messageToDelete != null)
-            {
-                commandEvent.getChannel().deleteMessageById(messageToDelete.getId()).queue();
-                eventsList.remove(messageToDelete);
-                try {
-                    Event.saveEventsToJson();
-                } catch (RaidBotRuntimeException e) {
-                    log.error("Could not save events to JSON backup!", e);
-                }
-                commandEvent.getChannel().sendMessage("Deleted event with ID " + eventToDelete.getEventId()).queue();
-            }
-            else {
-                commandEvent.getChannel().sendMessage("Unable to find message ID that matches input, please recheck and try again.").queue();
-            }
-        }
-        else {
+        } else {
             commandEvent.getChannel().sendMessage("Invalid arguments. Use `!delete <eventID>`").queue();
+        }
+        if (eventToDelete != null) {
+            MessageUtils.sendAutoDeletedMessage(new MessageBuilder().append("Deleted event with ID: ").append(eventToDelete.getEventId()).build(), 15, commandEvent.getChannel());
+            MessageUtils.deleteMessage(commandEvent.getMessage());
         }
     }
 }

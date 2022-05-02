@@ -17,9 +17,8 @@ import java.time.Duration;
 import java.time.ZonedDateTime;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Map;
 import java.util.Random;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -29,7 +28,6 @@ public class Event {
     private static final Logger log = LoggerFactory.getLogger(Event.class);
     private static final HashMap<Message, Event> plannedEventsList = new HashMap<>();
     // executor service for scheduling event deletion in background
-    private static final ScheduledExecutorService eventExecutorService = Executors.newScheduledThreadPool(5);
     private final String shortName;
     private String longName;
     private int playerCount = 0;
@@ -304,7 +302,7 @@ public class Event {
             }
         };
 
-        eventExecutorService.schedule(taskTest, minutesBetween, TimeUnit.MINUTES);
+        RaidBot.getRaidBotExecutorService().schedule(taskTest, minutesBetween, TimeUnit.MINUTES);
 
         if (log.isDebugEnabled())
         {
@@ -322,11 +320,7 @@ public class Event {
         StringBuilder builder = appendPlayerNames(event);
         commandEvent.getChannel().sendMessage(builder.toString()).queue();
 
-        // we should delete the event from plannedEventsList and the json now
-        plannedEventsList.remove(embedMessage);
-        // remove from json file here
-        saveEventsToJson();
-
+        removeEvent(embedMessage);
     }
 
     /**
@@ -356,5 +350,32 @@ public class Event {
             message.append(event.getLongName()).append(" is starting but has no participants ").append(CRYING_FACE_EMOJI);
         }
         return message;
+    }
+
+    /**
+     * Remove an event from the plannedEventsList, save the backup json so its updated, and delete the message
+     * @param eventMessage - the message key corresponding to the value Event we wish to remove
+     */
+    public static void removeEvent(Message eventMessage) throws RaidBotRuntimeException {
+        if (eventMessage != null) {
+            plannedEventsList.remove(eventMessage);
+            saveEventsToJson();
+        }
+    }
+
+    /**
+     * Find a Message from the provided input Event in the plannedEventsList HashMap
+     * @param event - event to find corresponding message for
+     * @return corresponding message to event
+     */
+    public static Message findMessageFromEvent(Event event) {
+        // work backwards to find key from value
+        Message returnMessage = null;
+        for (Map.Entry<Message, Event> entry : plannedEventsList.entrySet()) {
+            if (entry.getValue().equals(event)) {
+                returnMessage = entry.getKey();
+            }
+        }
+        return returnMessage;
     }
 }
