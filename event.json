@@ -59,6 +59,11 @@
     "player_count": 3,
     "exact_player_count": true
   },
+  "dual": {
+    "long_name": "Duality",
+    "player_count": 3,
+    "exact_player_count": true
+  },
   "vang": {
     "long_name": "Vanguard Ops",
     "player_count": 3
