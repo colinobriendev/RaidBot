@@ -34,19 +34,23 @@ public class DeleteCommand extends Command {
 
         String[] args = commandEvent.getArgs().split("\\s+");
         Event eventToDelete = null;
+        Message messageToDelete = null;
 
         if (args.length == 1) {
             eventToDelete = Event.getEventById(args[0]);
             if (eventToDelete == null) {
-                commandEvent.getChannel().sendMessage("Unable to find event message to delete with provided ID, please recheck and try again.").queue();
+                MessageUtils.sendAutoDeletedMessage(new MessageBuilder().append("Unable to find event message to delete with provided ID, please recheck and try again.").build(), 15, commandEvent.getChannel());
+                MessageUtils.deleteMessage(commandEvent.getMessage());
+                return;
             }
-            Message messageToDelete = Event.findMessageFromEvent(eventToDelete);
+
+            messageToDelete = Event.findMessageFromEvent(eventToDelete);
 
             try {
                 Event.removeEvent(messageToDelete);
             } catch (ErrorResponseException ere) {
                 log.error("Error response exception thrown when deleting message", ere);
-                commandEvent.getChannel().sendMessage("The message that you tried to delete may have already been deleted, contact an admin").queue();
+                MessageUtils.sendAutoDeletedMessage(new MessageBuilder().append("The message that you tried to delete may have already been deleted, contact an admin").build(), 15, commandEvent.getChannel());
             } catch (RaidBotRuntimeException e) {
                 log.error("Could not save events to JSON backup!", e);
             }
@@ -54,9 +58,10 @@ public class DeleteCommand extends Command {
         } else {
             commandEvent.getChannel().sendMessage("Invalid arguments. Use `!delete <eventID>`").queue();
         }
-        if (eventToDelete != null) {
+        if (eventToDelete != null && messageToDelete != null) {
+            commandEvent.getMessage().delete().queue();
+            messageToDelete.delete().queue();
             MessageUtils.sendAutoDeletedMessage(new MessageBuilder().append("Deleted event with ID: ").append(eventToDelete.getEventId()).build(), 15, commandEvent.getChannel());
-            MessageUtils.deleteMessage(commandEvent.getMessage());
         }
     }
 }
