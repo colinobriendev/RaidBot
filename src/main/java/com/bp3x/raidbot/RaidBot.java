@@ -1,5 +1,6 @@
 package com.bp3x.raidbot;
 
+import com.bp3x.raidbot.commands.lfg.DeleteCommand;
 import com.bp3x.raidbot.commands.lfg.LFGCommand;
 import com.bp3x.raidbot.commands.lfg.LFGReactionListener;
 import com.bp3x.raidbot.commands.lfg.RemindCommand;
@@ -25,6 +26,8 @@ import javax.annotation.Nonnull;
 import javax.security.auth.login.LoginException;
 import java.util.ArrayList;
 import java.util.Set;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
 
 public class RaidBot extends ListenerAdapter {
     private static final Logger log = LoggerFactory.getLogger(RaidBot.class);
@@ -33,11 +36,18 @@ public class RaidBot extends ListenerAdapter {
     private static JDA jda;
     private static Config config;
 
+    // executor service for various scheduled tasks within bot
+    public static final ScheduledExecutorService raidBotExecutorService = Executors.newScheduledThreadPool(5);
+
     public static JDA getJDA() {
         return jda;
     }
 
     public static Config getConfig() { return config; }
+
+    public static ScheduledExecutorService getRaidBotExecutorService() {
+        return raidBotExecutorService;
+    }
 
     /**
      * Handle coOwner id's which need to be separate Strings
@@ -76,7 +86,8 @@ public class RaidBot extends ListenerAdapter {
         //add commands
         client.addCommands(
                 new LFGCommand(),
-                new RemindCommand()
+                new RemindCommand(),
+                new DeleteCommand()
         );
 
         // add client and waiter

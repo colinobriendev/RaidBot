@@ -1,6 +1,8 @@
 package com.bp3x.raidbot.commands.lfg.util;
+
 import com.bp3x.raidbot.RaidBot;
 import com.bp3x.raidbot.commands.lfg.LFGConstants;
+import com.bp3x.raidbot.util.MessageUtils;
 import com.bp3x.raidbot.util.RaidBotJsonUtils;
 import com.bp3x.raidbot.util.RaidBotRuntimeException;
 import com.google.gson.JsonElement;
@@ -8,18 +10,19 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.google.gson.stream.JsonWriter;
 import com.jagrosh.jdautilities.command.CommandEvent;
+import net.dv8tion.jda.api.MessageBuilder;
 import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.entities.Message;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
 import java.io.*;
 import java.time.Duration;
 import java.time.ZonedDateTime;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Map;
 import java.util.Random;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -29,7 +32,6 @@ public class Event {
     private static final Logger log = LoggerFactory.getLogger(Event.class);
     private static final HashMap<Message, Event> plannedEventsList = new HashMap<>();
     // executor service for scheduling event deletion in background
-    private static final ScheduledExecutorService eventExecutorService = Executors.newScheduledThreadPool(5);
     private final String shortName;
     private String longName;
     private int playerCount = 0;
@@ -39,7 +41,7 @@ public class Event {
     private final String eventId;
     private final ZonedDateTime dateTime;
 
-    private static final String CRYING_FACE_EMOJI =  "\uD83D\uDE2D";
+    private static final String CRYING_FACE_EMOJI = "\uD83D\uDE2D";
 
     public Event(String shortName, ZonedDateTime dateTime) throws RaidBotRuntimeException {
         this.shortName = shortName;
@@ -51,14 +53,14 @@ public class Event {
         load(shortName);
         log.info("Created Event \"" + shortName + "\" scheduled for " + this.dateTime + " with event ID " + this.eventId);
     }
-    
+
     /**
      * Event Constructor for reading from JSON backup on startup.
      */
     public Event(String shortName, ZonedDateTime dateTime, String eventId,
                  ArrayList<Member> acceptedPlayers, ArrayList<Member> declinedPlayers,
                  ArrayList<Member> tentativePlayers) throws RaidBotRuntimeException {
-        
+
         this.shortName = shortName;
         this.dateTime = dateTime;
         this.eventId = eventId;
@@ -112,6 +114,7 @@ public class Event {
 
     /**
      * Return true if accepted or tentative participants exist on the event, false otherwise
+     *
      * @return - boolean
      */
     public boolean hasActiveParticipants() {
@@ -208,6 +211,7 @@ public class Event {
         }
         return null;
     }
+
     /**
      * Calculate the minutes between our planned event and now so the runnable knows when to execute
      */
@@ -238,7 +242,7 @@ public class Event {
             }
         }
     }
-    
+
     private static long calculateMinutesBetween(ZonedDateTime eventTime) {
         ZonedDateTime now = ZonedDateTime.now();
         return Duration.between(now, eventTime).toMinutes();
@@ -291,9 +295,8 @@ public class Event {
             log.warn("Unable to find planned event json file. Proceeding without loading from backup.");
         }
     }
-    
-    public static void scheduleEventDeletion(ZonedDateTime eventTime, CommandEvent commandEvent, Message embedMessage)
-    {
+
+    public static void scheduleEventDeletion(ZonedDateTime eventTime, CommandEvent commandEvent, Message embedMessage) {
         // schedule a message that will turn into removing the event after a time
         long minutesBetween = calculateMinutesBetween(eventTime);
         Runnable taskTest = () -> {
@@ -304,33 +307,33 @@ public class Event {
             }
         };
 
-        eventExecutorService.schedule(taskTest, minutesBetween, TimeUnit.MINUTES);
+        RaidBot.getRaidBotExecutorService().schedule(taskTest, minutesBetween, TimeUnit.MINUTES);
 
-        if (log.isDebugEnabled())
-        {
+        if (log.isDebugEnabled()) {
             log.debug("There are " + minutesBetween + " minutes between event time and now");
         }
     }
 
     /**
      * Handle the deletion of the event from plannedEventsList and from the planned_events.json
+     *
      * @param commandEvent - the command event
      * @param embedMessage - the message from the bot for the event
      */
     public static void handleEventDeletionAndNotifyPlayers(CommandEvent commandEvent, Message embedMessage) throws RaidBotRuntimeException {
         Event event = plannedEventsList.get(embedMessage);
         StringBuilder builder = appendPlayerNames(event);
-        commandEvent.getChannel().sendMessage(builder.toString()).queue();
-
-        // we should delete the event from plannedEventsList and the json now
-        plannedEventsList.remove(embedMessage);
-        // remove from json file here
-        saveEventsToJson();
-
+        // send a notification to players that deletes in 15 mins
+        MessageUtils.sendAutoDeletedMessage(new MessageBuilder().append(builder.toString()).build(), 15, commandEvent.getChannel());
+        // remove the event from the internal list and update the json
+        removeEvent(embedMessage);
+        // delete the embed since we already notified players of importance
+        embedMessage.delete().queue();
     }
 
     /**
      * Append a list of accepted players to notify them when the event begins. Will also notify tentative if we have less than max count on accepted.
+     *
      * @param event - the RaidBot Event
      * @return StringBuilder - names of players that have accepted or are tentative for the event
      */
@@ -351,10 +354,39 @@ public class Event {
                 }
             }
             message.append("\n").append(event.getLongName()).append(" is starting now!");
-        }
-        else {
+        } else {
             message.append(event.getLongName()).append(" is starting but has no participants ").append(CRYING_FACE_EMOJI);
         }
         return message;
+    }
+
+    /**
+     * Remove an event from the plannedEventsList, save the backup json so its updated, and delete the message
+     *
+     * @param eventMessage - the message key corresponding to the value Event we wish to remove
+     */
+    public static void removeEvent(Message eventMessage) throws RaidBotRuntimeException {
+        if (eventMessage != null) {
+            plannedEventsList.remove(eventMessage);
+            saveEventsToJson();
+
+        }
+    }
+
+    /**
+     * Find a Message from the provided input Event in the plannedEventsList HashMap
+     *
+     * @param event - event to find corresponding message for
+     * @return corresponding message to event
+     */
+    public static Message findMessageFromEvent(Event event) {
+        // work backwards to find key from value
+        Message returnMessage = null;
+        for (Map.Entry<Message, Event> entry : plannedEventsList.entrySet()) {
+            if (entry.getValue().equals(event)) {
+                returnMessage = entry.getKey();
+            }
+        }
+        return returnMessage;
     }
 }

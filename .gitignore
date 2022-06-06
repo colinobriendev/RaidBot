@@ -17,6 +17,9 @@ planned_events.json
 .idea/remote-targets.xml
 .idea/uiDesigner.xml
 .idea/runConfigurations.xml
+.idea/dataSources/
+.idea/dataSources.local.xml
+.idea/httpRequests/
 
 # build output
 target/
