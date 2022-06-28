@@ -48,15 +48,18 @@ public class LFGCommand extends Command {
         Role userTimezoneRole = commandEvent.getMember().getRoles().stream().filter(timezoneRoles::contains).findFirst().orElse(null);
         if (userTimezoneRole == null) {
             MessageUtils.sendAutoDeletedMessage("You do not have a timezone role assigned. Ask an admin to give you your role.", 300, commandEvent.getChannel());
+            MessageUtils.autoDeleteMessage(commandEvent.getMessage(), 300);
             return;
         }
 
         String[] args = commandEvent.getArgs().split("\\s+");
         if (args.length < 3) {
             MessageUtils.sendAutoDeletedMessage("Missing activity and/or date+time argument(s)", 300, commandEvent.getChannel());
+            MessageUtils.autoDeleteMessage(commandEvent.getMessage(), 300);
             return;
         } else if (args.length > 3) {
-            MessageUtils.sendAutoDeletedMessage("Too many arguments. Should be in the format of: " + this.arguments, 300, commandEvent.getChannel());;
+            MessageUtils.sendAutoDeletedMessage("Too many arguments. Should be in the format of: " + this.arguments, 300, commandEvent.getChannel());
+            MessageUtils.autoDeleteMessage(commandEvent.getMessage(), 300);
             return;
         }
 
@@ -81,10 +84,12 @@ public class LFGCommand extends Command {
 
             if (eventDateTime.isBefore(ZonedDateTime.now())) {
                 MessageUtils.sendAutoDeletedMessage("Cannot schedule an event in the past.", 300, commandEvent.getChannel());
+                MessageUtils.autoDeleteMessage(commandEvent.getMessage(), 300);
                 return;
             }
         } catch (DateTimeParseException e) {
             MessageUtils.sendAutoDeletedMessage("Invalid date/time argument.", 300, commandEvent.getChannel());
+            MessageUtils.autoDeleteMessage(commandEvent.getMessage(), 300);
             return;
         }
 

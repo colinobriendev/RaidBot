@@ -51,12 +51,14 @@ public class DeleteCommand extends Command {
             } catch (ErrorResponseException ere) {
                 log.error("Error response exception thrown when deleting message", ere);
                 MessageUtils.sendAutoDeletedMessage("The message that you tried to delete may have already been deleted, contact an admin", 300, commandEvent.getChannel());
+                MessageUtils.autoDeleteMessage(commandEvent.getMessage(), 300);
             } catch (RaidBotRuntimeException e) {
                 log.error("Could not save events to JSON backup!", e);
             }
 
         } else {
            MessageUtils.sendAutoDeletedMessage("Invalid arguments. Use `!delete <eventID>`", 300, commandEvent.getChannel());
+           MessageUtils.autoDeleteMessage(commandEvent.getMessage(), 300);
         }
         if (eventToDelete != null && messageToDelete != null) {
             MessageUtils.autoDeleteMessage(commandEvent.getMessage(), 300);
