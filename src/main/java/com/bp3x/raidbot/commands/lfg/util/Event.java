@@ -323,12 +323,10 @@ public class Event {
     public static void handleEventDeletionAndNotifyPlayers(CommandEvent commandEvent, Message embedMessage) throws RaidBotRuntimeException {
         Event event = plannedEventsList.get(embedMessage);
         StringBuilder builder = appendPlayerNames(event);
-        // send a notification to players that deletes in 15 mins
-        MessageUtils.sendAutoDeletedMessage(new MessageBuilder().append(builder.toString()).build(), 15, commandEvent.getChannel());
+        // send a notification to accepted and potentially tentative players
+        commandEvent.getChannel().sendMessage(new MessageBuilder().append(builder.toString()).build()).queue();
         // remove the event from the internal list and update the json
         removeEvent(embedMessage);
-        // delete the embed since we already notified players of importance
-        embedMessage.delete().queue();
     }
 
     /**
