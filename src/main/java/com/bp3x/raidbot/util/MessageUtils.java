@@ -14,16 +14,15 @@ public class MessageUtils {
     private MessageUtils() {
     }
 
-    private static MessageBuilder builder = new MessageBuilder();
-
     /**
      * Send a message and automatically delete it after provided time
      *
-     * @param message - the message
+     * @param receivedMessage - the message
      * @param delay   - time delay in seconds before deletion
      * @param channel - channel to send to
      */
     public static void sendAutoDeletedMessage(String receivedMessage, int delay, MessageChannel channel) {
+        MessageBuilder builder = new MessageBuilder();
         Message returnMessage = builder.append(receivedMessage).build();
         channel.sendMessage(returnMessage).queue(msg -> autoDeleteMessage(msg, delay));
     }
