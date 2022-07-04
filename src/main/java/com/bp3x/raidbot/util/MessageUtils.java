@@ -19,15 +19,26 @@ public class MessageUtils {
      * Send a message and automatically delete it after provided time
      *
      * @param receivedMessage - the message
-     * @param delay   - time delay in seconds before deletion
-     * @param commandEvent - the event instance
+     * @param delay           - time delay in seconds before deletion
+     * @param channel         - the channel to delete from
      */
-    public static void sendAutoDeletedMessage(String receivedMessage, int delay, CommandEvent commandEvent) {
+    public static void sendAutoDeletedMessage(String receivedMessage, int delay, MessageChannel channel) {
         MessageBuilder builder = new MessageBuilder();
         Message returnMessage = builder.append(receivedMessage).build();
-        commandEvent.getChannel().sendMessage(returnMessage).queue(msg -> autoDeleteMessage(msg, delay));
-        // auto delete the message instantiating the event as well
-        MessageUtils.autoDeleteMessage(commandEvent.getMessage(), delay);
+        channel.sendMessage(returnMessage).queue(msg -> autoDeleteMessage(msg, delay));
+    }
+
+    /**
+     * Use this function to delete both the target message and the commandEvent that spawned the message.
+     * Ex: good for bot error responses that will also require cleanup of the original command.
+     *
+     * @param receivedMessage - the message
+     * @param delay - time delay in seconds before deletion
+     * @param commandEvent - the command event whose start message we wish to delete
+     */
+    public static void sendAutoDeletedMessage(String receivedMessage, int delay, CommandEvent commandEvent) {
+        sendAutoDeletedMessage(receivedMessage, delay, commandEvent.getChannel());
+        autoDeleteMessage(commandEvent.getMessage(), delay);
     }
 
     /**
@@ -38,14 +49,5 @@ public class MessageUtils {
      */
     public static void autoDeleteMessage(Message message, int delay) {
         message.delete().queueAfter(delay, TimeUnit.SECONDS);
-    }
-
-    /**
-     * Delete a message 15 seconds after execution
-     *
-     * @param message - the message to delete
-     */
-    public static void deleteMessage(Message message) {
-        message.delete().queueAfter(15, TimeUnit.SECONDS);
     }
 }
