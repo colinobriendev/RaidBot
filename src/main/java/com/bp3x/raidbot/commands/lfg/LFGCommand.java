@@ -46,16 +46,16 @@ public class LFGCommand extends Command {
         ArrayList<Role> timezoneRoles = RaidBot.getConfig().getTimezoneRoles();
         Role userTimezoneRole = commandEvent.getMember().getRoles().stream().filter(timezoneRoles::contains).findFirst().orElse(null);
         if (userTimezoneRole == null) {
-            commandEvent.getChannel().sendMessage("You do not have a timezone role assigned. Ask an admin to give you your role.").queue();
+            MessageUtils.sendAutoDeletedMessage("You do not have a timezone role assigned. Ask an admin to give you your role.", 300, commandEvent);
             return;
         }
 
         String[] args = commandEvent.getArgs().split("\\s+");
         if (args.length < 3) {
-            commandEvent.getChannel().sendMessage("Missing activity and/or date+time argument(s)").queue();
+            MessageUtils.sendAutoDeletedMessage("Missing activity and/or date+time argument(s)", 300, commandEvent);
             return;
         } else if (args.length > 3) {
-            commandEvent.getChannel().sendMessage("Too many arguments. Should be in the format of: " + this.arguments).queue();
+            MessageUtils.sendAutoDeletedMessage("Too many arguments. Should be in the format of: " + this.arguments, 300, commandEvent);
             return;
         }
 
@@ -79,11 +79,11 @@ public class LFGCommand extends Command {
             eventDateTime = eventDateTime.withZoneSameInstant(ZoneId.of("GMT"));
 
             if (eventDateTime.isBefore(ZonedDateTime.now())) {
-                commandEvent.getChannel().sendMessage("Cannot schedule an event in the past.").queue();
+                MessageUtils.sendAutoDeletedMessage("Cannot schedule an event in the past.", 300, commandEvent);
                 return;
             }
         } catch (DateTimeParseException e) {
-            commandEvent.getChannel().sendMessage("Invalid date/time argument.").queue();
+            MessageUtils.sendAutoDeletedMessage("Invalid date/time argument.", 300, commandEvent);
             return;
         }
 
@@ -105,13 +105,13 @@ public class LFGCommand extends Command {
 
                 Event.scheduleEventDeletion(eventDateTime, commandEvent, success);
 
-                MessageUtils.deleteMessage(commandEvent.getMessage());
+                MessageUtils.autoDeleteMessage(commandEvent.getMessage(), 300);
 
             } else {
-                commandEvent.getChannel().sendMessage("That event does not exist").queue();
+                MessageUtils.sendAutoDeletedMessage("That event does not exist", 300, commandEvent);
             }
         } catch (RaidBotRuntimeException e) {
-            commandEvent.getChannel().sendMessage("Error occurred while creating event.").queue();
+            MessageUtils.sendAutoDeletedMessage("Error occurred while creating event.", 300, commandEvent);
         }
     }
 
