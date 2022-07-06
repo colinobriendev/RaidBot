@@ -3,6 +3,9 @@
     <output-path>$PROJECT_DIR$/out/artifacts/raidbot_jar</output-path>
     <root id="archive" name="raidbot.jar">
       <element id="module-output" name="raidbot" />
+      <element id="directory" name="META-INF">
+        <element id="file-copy" path="$PROJECT_DIR$/src/main/resources/META-INF/MANIFEST.MF" />
+      </element>
       <element id="extracted-dir" path="$MAVEN_REPOSITORY$/com/google/code/gson/gson/2.8.6/gson-2.8.6.jar" path-in-jar="/" />
       <element id="extracted-dir" path="$MAVEN_REPOSITORY$/pw/chew/jda-chewtils-command/1.21.0/jda-chewtils-command-1.21.0.jar" path-in-jar="/" />
       <element id="extracted-dir" path="$MAVEN_REPOSITORY$/com/neovisionaries/nv-websocket-client/2.14/nv-websocket-client-2.14.jar" path-in-jar="/" />
