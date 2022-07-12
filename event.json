@@ -68,6 +68,11 @@
     "long_name": "Vanguard Ops",
     "player_count": 3
   },
+  "nf": {
+    "long_name": "Nightfalls",
+    "player_count": 3,
+    "exact_player_count": true
+  },
   "cruc": {
     "long_name": "Quickplay Crucible",
     "player_count": 6
