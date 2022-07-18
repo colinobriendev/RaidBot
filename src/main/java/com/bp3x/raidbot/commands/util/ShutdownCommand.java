@@ -12,7 +12,7 @@ import org.slf4j.LoggerFactory;
 import java.util.concurrent.TimeUnit;
 
 public class ShutdownCommand extends Command {
-    private EventWaiter waiter;
+    private final EventWaiter waiter;
 
     Logger log = LoggerFactory.getLogger(ShutdownCommand.class);
 
@@ -48,8 +48,6 @@ public class ShutdownCommand extends Command {
             event.reactWarning();
             RaidBot.getJDA().getPresence().setPresence(OnlineStatus.OFFLINE, true);
             Thread.sleep(50);
-
-
 
             // disconnect from websocket, exit program
             RaidBot.getJDA().shutdown();
