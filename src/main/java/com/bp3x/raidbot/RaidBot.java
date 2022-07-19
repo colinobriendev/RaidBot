@@ -5,6 +5,7 @@ import com.bp3x.raidbot.commands.lfg.LFGCommand;
 import com.bp3x.raidbot.commands.lfg.LFGReactionListener;
 import com.bp3x.raidbot.commands.lfg.RemindCommand;
 import com.bp3x.raidbot.commands.lfg.util.Event;
+import com.bp3x.raidbot.commands.util.ShutdownCommand;
 import com.bp3x.raidbot.util.Config;
 import com.bp3x.raidbot.util.RaidBotGuildUtils;
 import com.bp3x.raidbot.util.RaidBotRuntimeException;
@@ -39,6 +40,7 @@ public class RaidBot extends ListenerAdapter {
     // executor service for various scheduled tasks within bot
     public static final ScheduledExecutorService raidBotExecutorService = Executors.newScheduledThreadPool(5);
 
+    public static EventWaiter getWaiter() { return waiter; }
     public static JDA getJDA() {
         return jda;
     }
@@ -87,7 +89,8 @@ public class RaidBot extends ListenerAdapter {
         client.addCommands(
                 new LFGCommand(),
                 new RemindCommand(),
-                new DeleteCommand()
+                new DeleteCommand(),
+                new ShutdownCommand()
         );
 
         // add client and waiter
