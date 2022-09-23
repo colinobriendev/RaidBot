@@ -2,7 +2,6 @@ package com.bp3x.raidbot.commands.lfg.util;
 
 import com.bp3x.raidbot.RaidBot;
 import com.bp3x.raidbot.commands.lfg.LFGConstants;
-import com.bp3x.raidbot.util.MessageUtils;
 import com.bp3x.raidbot.util.RaidBotJsonUtils;
 import com.bp3x.raidbot.util.RaidBotRuntimeException;
 import com.google.gson.JsonElement;
@@ -19,10 +18,7 @@ import org.slf4j.LoggerFactory;
 import java.io.*;
 import java.time.Duration;
 import java.time.ZonedDateTime;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Random;
+import java.util.*;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -325,6 +321,12 @@ public class Event {
         StringBuilder builder = appendPlayerNames(event);
         // send a notification to accepted and potentially tentative players
         commandEvent.getChannel().sendMessage(new MessageBuilder().append(builder.toString()).build()).queue();
+
+        // remove the emojis because the event is starting
+        embedMessage.removeReaction(LFGConstants.ACCEPTED_EMOJI).queue();
+        embedMessage.removeReaction(LFGConstants.TENTATIVE_EMOJI).queue();
+        embedMessage.removeReaction(LFGConstants.DECLINED_EMOJI).queue();
+
         // remove the event from the internal list and update the json
         removeEvent(embedMessage);
     }
