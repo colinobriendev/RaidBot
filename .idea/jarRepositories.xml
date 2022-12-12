@@ -24,6 +24,11 @@
     <remote-repository>
       <option name="id" value="chew-m2" />
       <option name="name" value="chew-m2" />
+      <option name="url" value="https://m2.chew.pro/snapshots" />
+    </remote-repository>
+    <remote-repository>
+      <option name="id" value="chew-m2" />
+      <option name="name" value="chew-m2" />
       <option name="url" value="https://m2.chew.pro/releases" />
     </remote-repository>
   </component>

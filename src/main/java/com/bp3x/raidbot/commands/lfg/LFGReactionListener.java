@@ -3,6 +3,7 @@ package com.bp3x.raidbot.commands.lfg;
 import com.bp3x.raidbot.commands.lfg.util.Event;
 import com.bp3x.raidbot.commands.lfg.util.LFGEmbedBuilder;
 import com.bp3x.raidbot.util.RaidBotRuntimeException;
+import jakarta.annotation.Nonnull;
 import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.entities.Message;
 import net.dv8tion.jda.api.events.message.react.GenericMessageReactionEvent;
@@ -11,8 +12,6 @@ import net.dv8tion.jda.api.hooks.ListenerAdapter;
 import net.dv8tion.jda.api.requests.RestAction;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import javax.annotation.Nonnull;
 import java.util.HashMap;
 
 public class LFGReactionListener extends ListenerAdapter {
