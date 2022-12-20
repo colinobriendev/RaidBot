@@ -1,9 +1,10 @@
 package com.bp3x.raidbot.util;
 
 import com.jagrosh.jdautilities.command.CommandEvent;
-import net.dv8tion.jda.api.MessageBuilder;
 import net.dv8tion.jda.api.entities.Message;
-import net.dv8tion.jda.api.entities.MessageChannel;
+import net.dv8tion.jda.api.entities.channel.middleman.MessageChannel;
+import net.dv8tion.jda.api.utils.messages.MessageCreateBuilder;
+import net.dv8tion.jda.api.utils.messages.MessageCreateData;
 
 import java.util.concurrent.TimeUnit;
 
@@ -23,8 +24,8 @@ public class MessageUtils {
      * @param channel         - the channel to delete from
      */
     public static void sendAutoDeletedMessage(String receivedMessage, int delay, MessageChannel channel) {
-        MessageBuilder builder = new MessageBuilder();
-        Message returnMessage = builder.append(receivedMessage).build();
+        MessageCreateBuilder builder = new MessageCreateBuilder();
+        MessageCreateData returnMessage = builder.setContent(receivedMessage).build();
         channel.sendMessage(returnMessage).queue(msg -> autoDeleteMessage(msg, delay));
     }
 

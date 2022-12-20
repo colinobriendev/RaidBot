@@ -55,12 +55,12 @@ public class RemindCommand extends Command {
 
         if (args[1].equalsIgnoreCase("accepted")) {
             for (Member player : remindEvent.getAcceptedPlayers()) {
-                sb.append(player.getAsMention()).append(LFGConstants.ACCEPTED_EMOJI);
+                sb.append(player.getAsMention()).append(LFGConstants.ACCEPTED_EMOJI_STRING);
                 sb.append("\n");
             }
         } else if (args[1].equalsIgnoreCase("tentative")) {
             for (Member player : remindEvent.getTentativePlayers()) {
-                sb.append(player.getAsMention()).append(LFGConstants.TENTATIVE_EMOJI);
+                sb.append(player.getAsMention()).append(LFGConstants.TENTATIVE_EMOJI_STRING);
                 sb.append("\n");
             }
         } else {
