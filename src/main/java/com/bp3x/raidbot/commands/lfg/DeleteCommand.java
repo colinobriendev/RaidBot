@@ -57,7 +57,6 @@ public class DeleteCommand extends Command {
            MessageUtils.sendAutoDeletedMessage("Invalid arguments. Use `!delete <eventID>`", 300, commandEvent);
         }
         if (eventToDelete != null && messageToDelete != null) {
-            MessageUtils.autoDeleteMessage(commandEvent.getMessage(), 300);
             messageToDelete.delete().queue();
             MessageUtils.sendAutoDeletedMessage("Deleted event with ID: " + eventToDelete.getEventId(), 300, commandEvent);
         }

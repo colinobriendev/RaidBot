@@ -10,6 +10,7 @@ import net.dv8tion.jda.api.events.message.react.GenericMessageReactionEvent;
 import net.dv8tion.jda.api.events.message.react.MessageReactionAddEvent;
 import net.dv8tion.jda.api.hooks.ListenerAdapter;
 import net.dv8tion.jda.api.requests.RestAction;
+import net.dv8tion.jda.api.utils.messages.MessageEditBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import java.util.HashMap;
@@ -28,8 +29,9 @@ public class LFGReactionListener extends ListenerAdapter {
      * @param reactionEvent the MessageReaction event needing to be handled
      */
     private void handleReactionEvent(GenericMessageReactionEvent reactionEvent) {
-        String reactionEmoji = reactionEvent.getReactionEmote().getName();
 
+        String reactionEmoji = reactionEvent.getEmoji().getName();
+        
         // ignore bot reactions
         if (reactionEvent.getUser().isBot() || !LFGConstants.EMOJI_LIST.contains(reactionEmoji)) return;
 
@@ -58,7 +60,9 @@ public class LFGReactionListener extends ListenerAdapter {
         Event event = plannedEventsList.get(message);
         setPlayerStatusEmbed(reactionEmoji, event, member);
         LFGEmbedBuilder embed = new LFGEmbedBuilder(event);
-        return message.editMessage(embed.build());
+        MessageEditBuilder editBuilder = new MessageEditBuilder();
+        editBuilder.setEmbeds(embed.build());
+        return message.editMessage(editBuilder.build());
     }
 
     /**
@@ -69,13 +73,13 @@ public class LFGReactionListener extends ListenerAdapter {
      */
     private void setPlayerStatusEmbed(String reactionEmoji, Event event, Member member) {
         switch(reactionEmoji) {
-            case LFGConstants.ACCEPTED_EMOJI:
+            case LFGConstants.ACCEPTED_EMOJI_STRING:
                 event.setPlayerStatus(member, Event.EventPlayerStatus.ACCEPTED);
                 break;
-            case LFGConstants.TENTATIVE_EMOJI:
+            case LFGConstants.TENTATIVE_EMOJI_STRING:
                 event.setPlayerStatus(member, Event.EventPlayerStatus.TENTATIVE);
                 break;
-            case LFGConstants.DECLINED_EMOJI:
+            case LFGConstants.DECLINED_EMOJI_STRING:
                 event.setPlayerStatus(member, Event.EventPlayerStatus.DECLINED);
                 break;
             default:

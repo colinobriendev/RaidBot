@@ -1,5 +1,7 @@
 package com.bp3x.raidbot.commands.lfg;
 
+import net.dv8tion.jda.api.entities.emoji.Emoji;
+
 import java.util.Arrays;
 import java.util.List;
 
@@ -15,13 +17,19 @@ public class LFGConstants {
     public static final String CONFIG_JSON = "config.json";
     public static final String EVENT_JSON = "event.json";
 
-    /* emoji constants for reactions on LFG embed */
-    public static final String ACCEPTED_EMOJI = "✅";
-    public static final String TENTATIVE_EMOJI = "❓";
-    public static final String DECLINED_EMOJI = "❌";
+    /* TODO: remove these constants and use Emoji below */
+    public static final String ACCEPTED_EMOJI_STRING = "✅";
+    public static final String TENTATIVE_EMOJI_STRING = "❓";
+    public static final String DECLINED_EMOJI_STRING = "❌";
+
+    public static final Emoji ACCEPTED_EMOJI = Emoji.fromUnicode("✅");
+    public static final Emoji TENTATIVE_EMOJI = Emoji.fromUnicode("❓");
+    public static final Emoji DECLINED_EMOJI = Emoji.fromUnicode("❌");
+
+
 
     /* list of strings containing our emoji constants */
-    protected static final List<String> EMOJI_LIST = Arrays.asList(ACCEPTED_EMOJI, TENTATIVE_EMOJI, DECLINED_EMOJI);
+    protected static final List<String> EMOJI_LIST = Arrays.asList(ACCEPTED_EMOJI_STRING, TENTATIVE_EMOJI_STRING, DECLINED_EMOJI_STRING);
 
     /* timestamp pattern for LFG event */
     public static final String TIMESTAMP_PATTERN = "MM/dd/yyyy hh:mma";

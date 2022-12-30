@@ -11,6 +11,7 @@ import com.jagrosh.jdautilities.command.CommandEvent;
 import net.dv8tion.jda.api.entities.Message;
 import net.dv8tion.jda.api.entities.Role;
 import net.dv8tion.jda.api.requests.RestAction;
+import net.dv8tion.jda.api.utils.messages.MessageCreateBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -92,8 +93,10 @@ public class LFGCommand extends Command {
                 Event plannedEvent = new Event(activityString, eventDateTime);
                 plannedEvent.setPlayerStatus(commandEvent.getMember(), Event.EventPlayerStatus.ACCEPTED);
                 LFGEmbedBuilder builder = new LFGEmbedBuilder(plannedEvent);
+                MessageCreateBuilder messageCreateBuilder = new MessageCreateBuilder();
+                messageCreateBuilder.addEmbeds(builder.build());
 
-                Message success = commandEvent.getChannel().sendMessage(builder.build()).complete();
+                Message success = commandEvent.getChannel().sendMessage(messageCreateBuilder.build()).complete();
 
                 RestAction<Void> reactWhiteCheckMark = success.addReaction(LFGConstants.ACCEPTED_EMOJI);
                 RestAction<Void> reactQuestion = success.addReaction(LFGConstants.TENTATIVE_EMOJI);
