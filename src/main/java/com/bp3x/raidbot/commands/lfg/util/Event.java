@@ -9,9 +9,9 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.google.gson.stream.JsonWriter;
 import com.jagrosh.jdautilities.command.CommandEvent;
-import net.dv8tion.jda.api.MessageBuilder;
 import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.entities.Message;
+import net.dv8tion.jda.api.utils.messages.MessageCreateBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -320,12 +320,10 @@ public class Event {
         Event event = plannedEventsList.get(embedMessage);
         StringBuilder builder = appendPlayerNames(event);
         // send a notification to accepted and potentially tentative players
-        commandEvent.getChannel().sendMessage(new MessageBuilder().append(builder.toString()).build()).queue();
+        commandEvent.getChannel().sendMessage(new MessageCreateBuilder().addContent(builder.toString()).build()).queue();
 
         // remove the emojis because the event is starting
-        embedMessage.removeReaction(LFGConstants.ACCEPTED_EMOJI).queue();
-        embedMessage.removeReaction(LFGConstants.TENTATIVE_EMOJI).queue();
-        embedMessage.removeReaction(LFGConstants.DECLINED_EMOJI).queue();
+        embedMessage.clearReactions().queue();
 
         // remove the event from the internal list and update the json
         removeEvent(embedMessage);

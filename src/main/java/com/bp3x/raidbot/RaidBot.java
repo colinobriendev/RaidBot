@@ -11,20 +11,19 @@ import com.bp3x.raidbot.util.RaidBotGuildUtils;
 import com.bp3x.raidbot.util.RaidBotRuntimeException;
 import com.jagrosh.jdautilities.command.CommandClientBuilder;
 import com.jagrosh.jdautilities.commons.waiter.EventWaiter;
+import jakarta.annotation.Nonnull;
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.JDABuilder;
 import net.dv8tion.jda.api.OnlineStatus;
 import net.dv8tion.jda.api.entities.Activity;
 import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.Role;
-import net.dv8tion.jda.api.events.ReadyEvent;
-import net.dv8tion.jda.api.events.ShutdownEvent;
+import net.dv8tion.jda.api.events.session.ReadyEvent;
+import net.dv8tion.jda.api.events.session.ShutdownEvent;
 import net.dv8tion.jda.api.hooks.ListenerAdapter;
-import org.jetbrains.annotations.NotNull;
+import net.dv8tion.jda.api.requests.GatewayIntent;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import javax.annotation.Nonnull;
-import javax.security.auth.login.LoginException;
 import java.util.ArrayList;
 import java.util.Set;
 import java.util.concurrent.Executors;
@@ -67,8 +66,8 @@ public class RaidBot extends ListenerAdapter {
         }
     }
 
-    public static void main(String[] args) throws LoginException, RaidBotRuntimeException {
-        log.info("Preparing to start RaidBot");
+    public static void main(String[] args) throws RaidBotRuntimeException {
+        log.info("Preparing to start RaidBot in JDA 5");
 
         final String LOADING = "Loading...";
 
@@ -97,6 +96,9 @@ public class RaidBot extends ListenerAdapter {
         jda = JDABuilder.createDefault(config.getToken())
                 .setStatus(OnlineStatus.DO_NOT_DISTURB)
                 .setActivity(Activity.playing(LOADING))
+
+                // explicit enabling required for 5.0
+                .enableIntents(GatewayIntent.MESSAGE_CONTENT)
 
                 // add client and waiter
                 .addEventListeners(
@@ -134,7 +136,7 @@ public class RaidBot extends ListenerAdapter {
     }
 
     @Override
-    public void onShutdown(@NotNull ShutdownEvent event) {
+    public void onShutdown(@Nonnull ShutdownEvent event) {
         try {
             Event.saveEventsToJson();
         } catch (RaidBotRuntimeException e) {
