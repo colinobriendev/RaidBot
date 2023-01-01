@@ -67,7 +67,7 @@ public class RaidBot extends ListenerAdapter {
     }
 
     public static void main(String[] args) throws RaidBotRuntimeException {
-        log.info("Preparing to start RaidBot");
+        log.info("Preparing to start RaidBot in JDA 5");
 
         final String LOADING = "Loading...";
 
