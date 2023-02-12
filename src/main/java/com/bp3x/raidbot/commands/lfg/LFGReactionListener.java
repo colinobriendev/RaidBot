@@ -31,21 +31,25 @@ public class LFGReactionListener extends ListenerAdapter {
     private void handleReactionEvent(GenericMessageReactionEvent reactionEvent) {
 
         String reactionEmoji = reactionEvent.getEmoji().getName();
-        
+
         // ignore bot reactions
         if (reactionEvent.getUser().isBot() || !LFGConstants.EMOJI_LIST.contains(reactionEmoji)) return;
 
         else {
-            reactionEvent.getChannel().retrieveMessageById(reactionEvent.getMessageId()).submit()
-                    .thenCompose(m -> rebuildEmbed(m, reactionEmoji, reactionEvent.getMember()).submit())
-                    .thenCompose(e -> reactionEvent.getReaction().removeReaction(reactionEvent.getUser()).submit());
-        }
+            Message message = reactionEvent.getChannel().retrieveMessageById(reactionEvent.getMessageId()).complete();
+            rebuildEmbed(message, reactionEmoji, reactionEvent.getMember()).submit();
+            reactionEvent.getReaction().removeReaction(reactionEvent.getUser()).submit();
 
-        try {
-            Event.saveEventsToJson();
-        } catch (RaidBotRuntimeException e) {
-            log.error("Could not save events to JSON backup!");
-            e.printStackTrace();
+            if (LFGConstants.ACCEPTED_EMOJI_STRING.equals(reactionEmoji) || LFGConstants.TENTATIVE_EMOJI_STRING.equals(reactionEmoji)) {
+                message.getStartedThread().addThreadMember(reactionEvent.getUser()).queue();
+            }
+
+            try {
+                Event.saveEventsToJson();
+            } catch (RaidBotRuntimeException e) {
+                log.error("Could not save events to JSON backup!");
+                e.printStackTrace();
+            }
         }
     }
 
@@ -62,6 +66,8 @@ public class LFGReactionListener extends ListenerAdapter {
         LFGEmbedBuilder embed = new LFGEmbedBuilder(event);
         MessageEditBuilder editBuilder = new MessageEditBuilder();
         editBuilder.setEmbeds(embed.build());
+        // after updating we also need to update the message within the thread context or the thread doesn't display it properly
+        message.getStartedThread().editMessageById(message.getStartedThread().getId(), editBuilder.build()).queue();
         return message.editMessage(editBuilder.build());
     }
 

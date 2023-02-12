@@ -6,6 +6,7 @@ import com.bp3x.raidbot.util.RaidBotRuntimeException;
 import com.jagrosh.jdautilities.command.Command;
 import com.jagrosh.jdautilities.command.CommandEvent;
 import net.dv8tion.jda.api.entities.Message;
+import net.dv8tion.jda.api.entities.channel.concrete.ThreadChannel;
 import net.dv8tion.jda.api.exceptions.ErrorResponseException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -57,8 +58,13 @@ public class DeleteCommand extends Command {
            MessageUtils.sendAutoDeletedMessage("Invalid arguments. Use `!delete <eventID>`", 300, commandEvent);
         }
         if (eventToDelete != null && messageToDelete != null) {
+            ThreadChannel thread = messageToDelete.getStartedThread();
+            if (thread != null)
+                thread.delete().queue();
+            else
+                log.error("Thread was null!");
             messageToDelete.delete().queue();
-            MessageUtils.sendAutoDeletedMessage("Deleted event with ID: " + eventToDelete.getEventId(), 300, commandEvent);
+            MessageUtils.sendAutoDeletedMessage("Deleted event with ID: " + eventToDelete.getEventId() + ". Please manually delete the thread. We're working on a fix to automatically delete it.", 300, commandEvent);
         }
     }
 }
