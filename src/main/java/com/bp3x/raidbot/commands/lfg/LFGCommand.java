@@ -10,7 +10,6 @@ import com.jagrosh.jdautilities.command.Command;
 import com.jagrosh.jdautilities.command.CommandEvent;
 import net.dv8tion.jda.api.entities.Message;
 import net.dv8tion.jda.api.entities.Role;
-import net.dv8tion.jda.api.entities.channel.concrete.ThreadChannel;
 import net.dv8tion.jda.api.requests.RestAction;
 import net.dv8tion.jda.api.utils.messages.MessageCreateBuilder;
 import org.slf4j.Logger;
@@ -111,8 +110,11 @@ public class LFGCommand extends Command {
 
                 MessageUtils.autoDeleteMessage(commandEvent.getMessage(), 300);
 
-                ThreadChannel thread = success.createThreadChannel(plannedEvent.getLongName() + "-" + plannedEvent.getEventId()).complete();
-                thread.sendMessage("Creating this thread to help you organize your event").queue();
+                success.createThreadChannel(plannedEvent.getLongName() + "-" + plannedEvent.getEventId()).queue(thread ->
+                {
+                    thread.sendMessage("Creating this thread to help you organize your event").queue();
+                    thread.addThreadMember(commandEvent.getAuthor()).queue();
+                });
 
             } else {
                 MessageUtils.sendAutoDeletedMessage("That event does not exist", 300, commandEvent);
