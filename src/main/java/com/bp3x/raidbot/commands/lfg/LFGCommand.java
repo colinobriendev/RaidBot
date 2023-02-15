@@ -110,6 +110,12 @@ public class LFGCommand extends Command {
 
                 MessageUtils.autoDeleteMessage(commandEvent.getMessage(), 300);
 
+                success.createThreadChannel(plannedEvent.getLongName() + "-" + plannedEvent.getEventId()).queue(thread ->
+                {
+                    thread.sendMessage("Creating this thread to help you organize your event").queue();
+                    thread.addThreadMember(commandEvent.getAuthor()).queue();
+                });
+
             } else {
                 MessageUtils.sendAutoDeletedMessage("That event does not exist", 300, commandEvent);
             }

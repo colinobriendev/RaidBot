@@ -31,21 +31,26 @@ public class LFGReactionListener extends ListenerAdapter {
     private void handleReactionEvent(GenericMessageReactionEvent reactionEvent) {
 
         String reactionEmoji = reactionEvent.getEmoji().getName();
-        
+
         // ignore bot reactions
         if (reactionEvent.getUser().isBot() || !LFGConstants.EMOJI_LIST.contains(reactionEmoji)) return;
 
         else {
-            reactionEvent.getChannel().retrieveMessageById(reactionEvent.getMessageId()).submit()
-                    .thenCompose(m -> rebuildEmbed(m, reactionEmoji, reactionEvent.getMember()).submit())
-                    .thenCompose(e -> reactionEvent.getReaction().removeReaction(reactionEvent.getUser()).submit());
-        }
+            reactionEvent.getChannel().retrieveMessageById(reactionEvent.getMessageId()).queue(message ->
+            {
+                rebuildEmbed(message, reactionEmoji, reactionEvent.getMember()).queue();
+                reactionEvent.getReaction().removeReaction(reactionEvent.getUser()).queue();
+                if (LFGConstants.ACCEPTED_EMOJI_STRING.equals(reactionEmoji) || LFGConstants.TENTATIVE_EMOJI_STRING.equals(reactionEmoji)) {
+                    message.getStartedThread().addThreadMember(reactionEvent.getUser()).queue();
+                }
+            });
 
-        try {
-            Event.saveEventsToJson();
-        } catch (RaidBotRuntimeException e) {
-            log.error("Could not save events to JSON backup!");
-            e.printStackTrace();
+            try {
+                Event.saveEventsToJson();
+            } catch (RaidBotRuntimeException e) {
+                log.error("Could not save events to JSON backup!");
+                e.printStackTrace();
+            }
         }
     }
 
@@ -62,6 +67,7 @@ public class LFGReactionListener extends ListenerAdapter {
         LFGEmbedBuilder embed = new LFGEmbedBuilder(event);
         MessageEditBuilder editBuilder = new MessageEditBuilder();
         editBuilder.setEmbeds(embed.build());
+
         return message.editMessage(editBuilder.build());
     }
 
