@@ -320,7 +320,9 @@ public class Event {
         Event event = plannedEventsList.get(embedMessage);
         StringBuilder builder = appendPlayerNames(event);
         // send a notification to accepted and potentially tentative players
-        commandEvent.getChannel().sendMessage(new MessageCreateBuilder().addContent(builder.toString()).build()).queue();
+        commandEvent.getChannel().retrieveMessageById(embedMessage.getId()).queue(latestMessageInstance -> {
+            latestMessageInstance.getStartedThread().sendMessage(builder.toString()).queue();
+            });
 
         // remove the emojis because the event is starting
         embedMessage.clearReactions().queue();
