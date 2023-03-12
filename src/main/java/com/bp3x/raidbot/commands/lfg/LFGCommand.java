@@ -1,135 +1,139 @@
 package com.bp3x.raidbot.commands.lfg;
 
 import com.bp3x.raidbot.RaidBot;
-import com.bp3x.raidbot.commands.lfg.util.*;
-import com.bp3x.raidbot.util.MessageUtils;
+import com.bp3x.raidbot.commands.lfg.util.Event;
+import com.bp3x.raidbot.commands.lfg.util.LFGEmbedBuilder;
 import com.bp3x.raidbot.util.RaidBotRuntimeException;
-import com.google.gson.JsonObject;
-import com.google.gson.JsonParser;
-import com.jagrosh.jdautilities.command.Command;
-import com.jagrosh.jdautilities.command.CommandEvent;
-import net.dv8tion.jda.api.entities.Message;
+import com.jagrosh.jdautilities.command.SlashCommand;
+import com.jagrosh.jdautilities.command.SlashCommandEvent;
 import net.dv8tion.jda.api.entities.Role;
+import net.dv8tion.jda.api.interactions.commands.OptionType;
+import net.dv8tion.jda.api.interactions.commands.build.OptionData;
 import net.dv8tion.jda.api.requests.RestAction;
 import net.dv8tion.jda.api.utils.messages.MessageCreateBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.FileNotFoundException;
-import java.io.FileReader;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 
 /**
  * LFG Command to schedule events
  */
-public class LFGCommand extends Command {
+public class LFGCommand extends SlashCommand {
     private final Logger log = LoggerFactory.getLogger(LFGCommand.class);
-
-    public LFGCommand() throws RaidBotRuntimeException {
+    
+    public LFGCommand() {
         this.name = "lfg";
-        this.help = buildHelpMessage();
-        this.arguments = "<shortName> <date: MM/dd/yy> <time: hh:mma>";
-        this.guildOnly = false;
+        this.help = "Schedule a new event.";
+        this.guildOnly = true;
         this.ownerCommand = false;
+        
+        this.options = Arrays.asList(
+                new OptionData(OptionType.STRING, "event", "The short name of the event you want to schedule.", true),
+                new OptionData(OptionType.STRING, "date", "The date of the event in MM/dd/yy format. Example: 06/28/23", true),
+                new OptionData(OptionType.STRING, "time", "The time of the event in hh:mma format. Example: 8:30pm", true)
+        );
     }
-
+    
     @Override
-    protected void execute(CommandEvent commandEvent) {
-        log.info("LFG command by: " + commandEvent.getAuthor().getName() + "#" + commandEvent.getAuthor().getDiscriminator());
-        log.info("Wants to schedule " + commandEvent.getArgs());
-
-        // get and verify the user's timezone role for conversion
-        ArrayList<Role> timezoneRoles = RaidBot.getConfig().getTimezoneRoles();
-        Role userTimezoneRole = commandEvent.getMember().getRoles().stream().filter(timezoneRoles::contains).findFirst().orElse(null);
-        if (userTimezoneRole == null) {
-            MessageUtils.sendAutoDeletedMessage("You do not have a timezone role assigned. Ask an admin to give you your role.", 300, commandEvent);
-            return;
-        }
-
-        String[] args = commandEvent.getArgs().split("\\s+");
-        if (args.length < 3) {
-            MessageUtils.sendAutoDeletedMessage("Missing activity and/or date+time argument(s)", 300, commandEvent);
-            return;
-        } else if (args.length > 3) {
-            MessageUtils.sendAutoDeletedMessage("Too many arguments. Should be in the format of: " + this.arguments, 300, commandEvent);
-            return;
-        }
-
-        String activityString = args[0];
-
-        String dateTimeString = formatDateTimeInput(args[1], args[2]);
-
-        ZonedDateTime eventDateTime;
-        try {
-            // look up the full name for the zone id (ex: "PST" -> "America/Los_Angeles"
-            // this ensures daylight savings is factored in
-            String zoneId;
-            HashMap<String, String> timezoneIdNameMapping = RaidBot.getConfig().getTimezones();
-            zoneId = timezoneIdNameMapping.get(userTimezoneRole.getName());
-
-            // parse timestamp provided by user, using their role to convert from their timezone to GMT
-            DateTimeFormatter userTimestampFormatter = DateTimeFormatter
-                    .ofPattern(LFGConstants.TIMESTAMP_PATTERN)
-                    .withZone(ZoneId.of(zoneId));
-            eventDateTime = ZonedDateTime.from(userTimestampFormatter.parse(dateTimeString));
-            eventDateTime = eventDateTime.withZoneSameInstant(ZoneId.of("GMT"));
-
-            if (eventDateTime.isBefore(ZonedDateTime.now())) {
-                MessageUtils.sendAutoDeletedMessage("Cannot schedule an event in the past.", 300, commandEvent);
+    protected void execute(SlashCommandEvent commandEvent) {
+        String shortName = commandEvent.optString("event");
+        String date = commandEvent.optString("date");
+        String time = commandEvent.optString("time");
+    
+        var commandUser = commandEvent.getMember().getUser();
+        log.info("LFG command by: " + commandUser.getName() + "#" + commandUser.getDiscriminator());
+        log.info("Wants to schedule " + shortName + " " + date + " " + time);
+        
+        commandEvent.deferReply(true).queue(hook -> {
+            // get and verify the user's timezone role for conversion
+            ArrayList<Role> timezoneRoles = RaidBot.getConfig().getTimezoneRoles();
+            Role userTimezoneRole = commandEvent.getMember().getRoles().stream().filter(timezoneRoles::contains).findFirst().orElse(null);
+            if (userTimezoneRole == null) {
+                hook.editOriginal("You do not have a timezone role assigned. Ask an admin to give you your role.").queue();
                 return;
             }
-        } catch (DateTimeParseException e) {
-            MessageUtils.sendAutoDeletedMessage("Invalid date/time argument.", 300, commandEvent);
-            return;
-        }
-
-        try {
-            if (Event.eventExists(activityString)) {
-                Event plannedEvent = new Event(activityString, eventDateTime);
-                plannedEvent.setPlayerStatus(commandEvent.getMember(), Event.EventPlayerStatus.ACCEPTED);
-                LFGEmbedBuilder builder = new LFGEmbedBuilder(plannedEvent);
-                MessageCreateBuilder messageCreateBuilder = new MessageCreateBuilder();
-                messageCreateBuilder.addEmbeds(builder.build());
-
-                Message success = commandEvent.getChannel().sendMessage(messageCreateBuilder.build()).complete();
-
-                RestAction<Void> reactWhiteCheckMark = success.addReaction(LFGConstants.ACCEPTED_EMOJI);
-                RestAction<Void> reactQuestion = success.addReaction(LFGConstants.TENTATIVE_EMOJI);
-                RestAction<Void> reactCross = success.addReaction(LFGConstants.DECLINED_EMOJI);
-
-                RestAction.allOf(reactWhiteCheckMark, reactQuestion, reactCross).queue();
-
-                plannedEvent.registerEvent(success);
-
-                Event.scheduleEventDeletion(eventDateTime, commandEvent, success);
-
-                MessageUtils.autoDeleteMessage(commandEvent.getMessage(), 300);
-
-                success.createThreadChannel(plannedEvent.getLongName() + "-" + plannedEvent.getEventId()).queue(thread ->
-                {
-                    thread.sendMessage("Creating this thread to help you organize your event").queue();
-                    thread.addThreadMember(commandEvent.getAuthor()).queue();
-                });
-
-            } else {
-                MessageUtils.sendAutoDeletedMessage("That event does not exist", 300, commandEvent);
+            
+            if (commandEvent.getChannelType().isThread()) {
+                hook.editOriginal("This command cannot be used in a thread. Please try again in the event planning channel.").queue();
+                return;
             }
-        } catch (RaidBotRuntimeException e) {
-            MessageUtils.sendAutoDeletedMessage("Error occurred while creating event.", 300, commandEvent);
-        }
+            
+            String dateTimeString = formatDateTimeInput(date, time);
+            
+            ZonedDateTime eventDateTime;
+            try {
+                // look up the full name for the zone id (ex: "PST" -> "America/Los_Angeles"
+                // this ensures daylight savings is factored in
+                String zoneId;
+                HashMap<String, String> timezoneIdNameMapping = RaidBot.getConfig().getTimezones();
+                zoneId = timezoneIdNameMapping.get(userTimezoneRole.getName());
+                
+                // parse timestamp provided by user, using their role to convert from their timezone to GMT
+                DateTimeFormatter userTimestampFormatter = DateTimeFormatter
+                        .ofPattern(LFGConstants.TIMESTAMP_PATTERN)
+                        .withZone(ZoneId.of(zoneId));
+                eventDateTime = ZonedDateTime.from(userTimestampFormatter.parse(dateTimeString));
+                eventDateTime = eventDateTime.withZoneSameInstant(ZoneId.of("GMT"));
+                
+                if (eventDateTime.isBefore(ZonedDateTime.now())) {
+                    hook.editOriginal("Cannot schedule an event in the past. Given timestamp: " + date + " " + time).queue();
+                    return;
+                }
+            } catch (DateTimeParseException e) {
+                hook.editOriginal("Invalid date and/or time given. Please review argument format or ask an admin for help.\n" +
+                                          "Full parsing error: ||" + e.getMessage() + "||.").queue();
+                return;
+            }
+            
+            try {
+                if (Event.eventExists(shortName)) {
+                    Event plannedEvent = new Event(shortName, eventDateTime);
+                    plannedEvent.setPlayerStatus(commandEvent.getMember(), Event.EventPlayerStatus.ACCEPTED);
+                    LFGEmbedBuilder builder = new LFGEmbedBuilder(plannedEvent);
+                    MessageCreateBuilder messageCreateBuilder = new MessageCreateBuilder();
+                    messageCreateBuilder.addEmbeds(builder.build());
+                    
+                    ZonedDateTime finalEventDateTime = eventDateTime;
+                    commandEvent.getChannel().sendMessage(messageCreateBuilder.build()).queue((m) -> {
+                        RestAction<Void> reactWhiteCheckMark = m.addReaction(LFGConstants.ACCEPTED_EMOJI);
+                        RestAction<Void> reactQuestion = m.addReaction(LFGConstants.TENTATIVE_EMOJI);
+                        RestAction<Void> reactCross = m.addReaction(LFGConstants.DECLINED_EMOJI);
+                        RestAction.allOf(reactWhiteCheckMark, reactQuestion, reactCross).queue();
+                        
+                        plannedEvent.registerEvent(m);
+                        
+                        hook.editOriginal("Event created successfully.").queue();
+                        
+                        m.createThreadChannel(plannedEvent.getLongName() + "-" + plannedEvent.getEventId()).queue(thread -> {
+                            thread.sendMessage("Creating this thread to help you organize your event.").queue();
+                            thread.addThreadMember(commandEvent.getMember()).queue();
+                        });
+                        
+                        Event.scheduleEventDeletion(finalEventDateTime, commandEvent, m);
+                    });
+                    
+                } else {
+                    hook.editOriginal("That event type does not exist. You entered: `" + shortName + "`").queue();
+                }
+            } catch (RaidBotRuntimeException e) {
+                hook.editOriginal("Error occurred while creating event. Try again or contact an admin.").queue();
+            }
+        });
     }
-
+    
     /**
      * Add leading zeros to date and time when needed
      */
     String formatDateTimeInput(String date, String time) {
         String result;
-
+        
         StringBuilder dateStringBuilder = new StringBuilder();
         String[] dateSplit = date.split("/");
         for (int i = 0; i < dateSplit.length - 1; i++) {
@@ -141,12 +145,12 @@ public class LFGCommand extends Command {
             }
             dateStringBuilder.append("/");
         }
-
+        
         if (Integer.parseInt(dateSplit[2]) < 2000) {
             dateStringBuilder.append("20");
         }
         dateStringBuilder.append(dateSplit[2]);
-
+        
         StringBuilder timeStringBuilder = new StringBuilder();
         String[] timeSplit = time.split(":");
         String hour = timeSplit[0];
@@ -158,43 +162,8 @@ public class LFGCommand extends Command {
         } else {
             timeStringBuilder = new StringBuilder(time);
         }
-
+        
         result = (dateStringBuilder + " " + timeStringBuilder).toUpperCase();
         return result;
-    }
-
-    /**
-     * Construct String for when !help is called. Uses event.json to build out the message.
-     *
-     * @return - Help message for LFGCommand
-     * @throws RaidBotRuntimeException - throw this to shut down the bot
-     */
-    private String buildHelpMessage() throws RaidBotRuntimeException {
-        StringBuilder helpMessage = new StringBuilder();
-        final String CODE = "`"; // back quote for formatting in discord
-        helpMessage.append("\n" + LFGConstants.LFG_HELP_START);
-        JsonObject eventJson = getEventsJson();
-        // for each short name in event.json, create a line for the help message to explain short name and what it represents
-        for (String shortName: eventJson.keySet()) {
-            JsonObject eventObject = eventJson.getAsJsonObject(shortName);
-            helpMessage.append(CODE).append(shortName).append(":").append(CODE).append(" ").append(eventObject.get(LFGConstants.LONG_NAME_KEY)).append("\n");
-        }
-        return helpMessage.toString();
-    }
-
-    /**
-     * Retrieve event.json for use with building out help messages
-     * @return JsonObject for event.json file
-     * @throws RaidBotRuntimeException - throw this to shut down the bot
-     */
-    private JsonObject getEventsJson() throws RaidBotRuntimeException {
-
-        JsonObject eventsJson;
-        try {
-            eventsJson = JsonParser.parseReader(new FileReader(LFGConstants.EVENT_JSON)).getAsJsonObject();
-        } catch (FileNotFoundException e) {
-            throw new RaidBotRuntimeException("Caught file not found exception, shutting down bot");
-        }
-        return eventsJson;
     }
 }

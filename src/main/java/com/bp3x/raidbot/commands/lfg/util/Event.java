@@ -8,10 +8,9 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.google.gson.stream.JsonWriter;
-import com.jagrosh.jdautilities.command.CommandEvent;
+import com.jagrosh.jdautilities.command.SlashCommandEvent;
 import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.entities.Message;
-import net.dv8tion.jda.api.utils.messages.MessageCreateBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -292,7 +291,7 @@ public class Event {
         }
     }
 
-    public static void scheduleEventDeletion(ZonedDateTime eventTime, CommandEvent commandEvent, Message embedMessage) {
+    public static void scheduleEventDeletion(ZonedDateTime eventTime, SlashCommandEvent commandEvent, Message embedMessage) {
         // schedule a message that will turn into removing the event after a time
         long minutesBetween = calculateMinutesBetween(eventTime);
         Runnable taskTest = () -> {
@@ -316,13 +315,19 @@ public class Event {
      * @param commandEvent - the command event
      * @param embedMessage - the message from the bot for the event
      */
-    public static void handleEventDeletionAndNotifyPlayers(CommandEvent commandEvent, Message embedMessage) throws RaidBotRuntimeException {
+    public static void handleEventDeletionAndNotifyPlayers(SlashCommandEvent commandEvent, Message embedMessage) throws RaidBotRuntimeException {
         Event event = plannedEventsList.get(embedMessage);
         StringBuilder builder = appendPlayerNames(event);
         // send a notification to accepted and potentially tentative players
-        commandEvent.getChannel().retrieveMessageById(embedMessage.getId()).queue(latestMessageInstance -> {
-            latestMessageInstance.getStartedThread().sendMessage(builder.toString()).queue();
-            });
+        var eventsChannel = commandEvent.getChannel();
+        eventsChannel.retrieveMessageById(embedMessage.getId()).queue(latestMessageInstance -> {
+            var eventThread = latestMessageInstance.getStartedThread();
+            if (eventThread != null) {
+                eventThread.sendMessage(builder).queue();
+            } else {
+                eventsChannel.sendMessage(builder).queue();
+            }
+        });
 
         // remove the emojis because the event is starting
         embedMessage.clearReactions().queue();
