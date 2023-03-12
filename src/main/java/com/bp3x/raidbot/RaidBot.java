@@ -84,12 +84,12 @@ public class RaidBot extends ListenerAdapter {
         //add commands
         client.addCommands(
                 new RemindCommand(),
-                new DeleteCommand(),
                 new ShutdownCommand()
         );
         
         client.addSlashCommands(
-                new LFGCommand()
+                new LFGCommand(),
+                new DeleteCommand()
         );
 
         // add client and waiter
