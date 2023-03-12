@@ -2,6 +2,7 @@ package com.bp3x.raidbot;
 
 import com.bp3x.raidbot.commands.lfg.*;
 import com.bp3x.raidbot.commands.lfg.util.Event;
+import com.bp3x.raidbot.commands.util.ShutdownButtonListener;
 import com.bp3x.raidbot.commands.util.ShutdownCommand;
 import com.bp3x.raidbot.util.Config;
 import com.bp3x.raidbot.util.RaidBotGuildUtils;
@@ -83,13 +84,13 @@ public class RaidBot extends ListenerAdapter {
 
         //add commands
         client.addCommands(
-                new RemindCommand(),
-                new ShutdownCommand()
+                new RemindCommand()
         );
         
         client.addSlashCommands(
                 new LFGCommand(),
-                new DeleteCommand()
+                new DeleteCommand(),
+                new ShutdownCommand()
         );
 
         // add client and waiter
@@ -107,7 +108,8 @@ public class RaidBot extends ListenerAdapter {
                         new RaidBot())
 
                 // add our event listeners
-                .addEventListeners(new LFGReactionListener())
+                .addEventListeners(new LFGReactionListener(),
+                                   new ShutdownButtonListener())
 
                 .build();
     }
