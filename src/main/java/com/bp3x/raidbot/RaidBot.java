@@ -81,11 +81,6 @@ public class RaidBot extends ListenerAdapter {
         handleCoOwnerIDs(client, config);
         client.setPrefix(config.getPrefix());
         log.info("Prefix is set to " + config.getPrefix());
-
-        //add commands
-        client.addCommands(
-                new RemindCommand()
-        );
         
         client.addSlashCommands(
                 new LFGCommand(),
