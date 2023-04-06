@@ -35,7 +35,8 @@ public class LFGCommand extends SlashCommand {
         this.ownerCommand = false;
         
         this.options = Arrays.asList(
-                new OptionData(OptionType.STRING, "event", "The short name of the event you want to schedule.", true),
+                new OptionData(OptionType.STRING, "event", "The short name of the event you want to schedule. " +
+                        "Use the /events command to see the full list.", true),
                 new OptionData(OptionType.STRING, "date", "The date of the event in MM/dd/yy format. Example: 06/28/23", true),
                 new OptionData(OptionType.STRING, "time", "The time of the event in hh:mma format. Example: 8:30pm", true)
         );

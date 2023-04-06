@@ -1,5 +1,6 @@
 package com.bp3x.raidbot;
 
+import com.bp3x.raidbot.commands.EventsCommand;
 import com.bp3x.raidbot.commands.lfg.*;
 import com.bp3x.raidbot.commands.lfg.util.Event;
 import com.bp3x.raidbot.commands.util.ShutdownButtonListener;
@@ -74,7 +75,7 @@ public class RaidBot extends ListenerAdapter {
 
         CommandClientBuilder client = new CommandClientBuilder();
 
-        // Default setup, type !help
+        // Default setup, type /help
         client.useDefaultGame();
 
         client.setOwnerId(config.getOwnerID());
@@ -85,6 +86,7 @@ public class RaidBot extends ListenerAdapter {
         client.addSlashCommands(
                 new LFGCommand(),
                 new DeleteCommand(),
+                new EventsCommand(),
                 new ShutdownCommand()
         );
 
