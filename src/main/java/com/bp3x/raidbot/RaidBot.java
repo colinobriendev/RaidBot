@@ -1,10 +1,9 @@
 package com.bp3x.raidbot;
 
-import com.bp3x.raidbot.commands.lfg.DeleteCommand;
-import com.bp3x.raidbot.commands.lfg.LFGCommand;
-import com.bp3x.raidbot.commands.lfg.LFGReactionListener;
-import com.bp3x.raidbot.commands.lfg.RemindCommand;
+import com.bp3x.raidbot.commands.EventsCommand;
+import com.bp3x.raidbot.commands.lfg.*;
 import com.bp3x.raidbot.commands.lfg.util.Event;
+import com.bp3x.raidbot.commands.util.ShutdownButtonListener;
 import com.bp3x.raidbot.commands.util.ShutdownCommand;
 import com.bp3x.raidbot.util.Config;
 import com.bp3x.raidbot.util.RaidBotGuildUtils;
@@ -76,19 +75,18 @@ public class RaidBot extends ListenerAdapter {
 
         CommandClientBuilder client = new CommandClientBuilder();
 
-        // Default setup, type !help
+        // Default setup, type /help
         client.useDefaultGame();
 
         client.setOwnerId(config.getOwnerID());
         handleCoOwnerIDs(client, config);
         client.setPrefix(config.getPrefix());
         log.info("Prefix is set to " + config.getPrefix());
-
-        //add commands
-        client.addCommands(
+        
+        client.addSlashCommands(
                 new LFGCommand(),
-                new RemindCommand(),
                 new DeleteCommand(),
+                new EventsCommand(),
                 new ShutdownCommand()
         );
 
@@ -107,7 +105,8 @@ public class RaidBot extends ListenerAdapter {
                         new RaidBot())
 
                 // add our event listeners
-                .addEventListeners(new LFGReactionListener())
+                .addEventListeners(new LFGReactionListener(),
+                                   new ShutdownButtonListener())
 
                 .build();
     }
