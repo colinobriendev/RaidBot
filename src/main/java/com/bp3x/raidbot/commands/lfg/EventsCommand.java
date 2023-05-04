@@ -1,7 +1,5 @@
-package com.bp3x.raidbot.commands;
+package com.bp3x.raidbot.commands.lfg;
 
-import com.bp3x.raidbot.RaidBot;
-import com.bp3x.raidbot.commands.lfg.LFGConstants;
 import com.bp3x.raidbot.util.RaidBotRuntimeException;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
@@ -37,7 +35,7 @@ public class EventsCommand extends SlashCommand {
             } catch (RaidBotRuntimeException e) {
                 hook.editOriginal("Something went wrong while trying to retrieve the events list. " +
                                           "Please contact an admin.").queue();
-                e.printStackTrace();
+                log.error(e.toString());
             }
         });
     }

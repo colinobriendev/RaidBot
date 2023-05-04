@@ -10,12 +10,10 @@ import net.dv8tion.jda.api.interactions.components.buttons.Button;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.concurrent.TimeUnit;
-
 public class ShutdownCommand extends SlashCommand {
     private final EventWaiter waiter;
 
-    Logger log = LoggerFactory.getLogger(ShutdownCommand.class);
+    static Logger log = LoggerFactory.getLogger(ShutdownCommand.class);
 
     public ShutdownCommand() {
         this.name = "shutdown";
@@ -48,7 +46,7 @@ public class ShutdownCommand extends SlashCommand {
                 RaidBot.getJDA().shutdown();
                 System.exit(0);
             } catch (InterruptedException e) {
-                e.printStackTrace();
+                log.error(e.toString());
                 m.editMessage("An error occurred while shutting down. Please wait a few moments and try again.").queue();
             }
         });
