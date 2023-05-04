@@ -1,6 +1,6 @@
 package com.bp3x.raidbot;
 
-import com.bp3x.raidbot.commands.EventsCommand;
+import com.bp3x.raidbot.commands.lfg.EventsCommand;
 import com.bp3x.raidbot.commands.lfg.*;
 import com.bp3x.raidbot.commands.lfg.util.Event;
 import com.bp3x.raidbot.commands.util.ShutdownButtonListener;
@@ -65,7 +65,7 @@ public class RaidBot extends ListenerAdapter {
         }
     }
 
-    public static void main(String[] args) throws RaidBotRuntimeException {
+    public static void main(String[] args) {
         log.info("Preparing to start RaidBot in JDA 5");
 
         final String LOADING = "Loading...";
